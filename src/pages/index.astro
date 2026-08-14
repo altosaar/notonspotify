@@ -1,0 +1,130 @@
+---
+import "../styles/global.css";
+import playlist from "../generated/playlist.json";
+import type { ResolvedTrack } from "../lib/adapters/types.ts";
+
+const tracks = playlist as ResolvedTrack[];
+const description =
+  "A clock that tells track time — a player for music that isn't on Spotify, from YouTube, SoundCloud and Bandcamp.";
+const canonical = new URL("/", Astro.site).href;
+const og = new URL("/og.png", Astro.site).href;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <title>not on spotify</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.png" type="image/png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="not on spotify" />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={og} />
+    <meta name="twitter:card" content="summary_large_image" />
+    {/* The two faces jaan.io already serves, and nothing else. */}
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="/fonts/HankenGrotesk-latin.woff2"
+      crossorigin
+    />
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/Inter.woff2" crossorigin />
+  </head>
+
+  <body>
+    <div class="app">
+      <header class="bar">
+        {
+          /* Off → repeat the list → repeat this one → off. Remembered between
+             visits. The whole header, and the only chrome on the page. */
+        }
+        <button class="repeat" id="repeat" type="button" aria-label="repeat: off">
+          <svg class="repeat-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 10V9a4 4 0 0 1 4-4h9"></path>
+            <path d="m14 2 3 3-3 3"></path>
+            <path d="M20 14v1a4 4 0 0 1-4 4H7"></path>
+            <path d="m10 16-3 3 3 3"></path>
+            <text class="one" x="12" y="15.5">1</text>
+          </svg>
+        </button>
+        <button class="ask" id="ask" type="button" aria-label="about">?</button>
+      </header>
+
+      {
+        /* A real <dialog>: it takes focus, traps it, closes on Escape and comes
+           with its own backdrop — all of which would otherwise be hand-written
+           and worse. */
+      }
+      <dialog class="about" id="about" aria-label="about" tabindex="-1">
+        <button class="close" id="about-close" type="button" aria-label="close">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 5 19 19M19 5 5 19"></path>
+          </svg>
+        </button>
+        <ul class="credits">
+          <li>clocks: <a href="https://clocks.dev/">https://clocks.dev/</a></li>
+          <li>code: claude</li>
+          <li>thought: <a href="https://jaan.io">https://jaan.io</a></li>
+          <li>
+            submit a song:{" "}
+            <a href="mailto:j@jaan.io?subject=Not%20on%20Spotify%3A%20%7Binsert%20song%20here%7D"
+              >j@jaan.io</a
+            >
+          </li>
+        </ul>
+      </dialog>
+
+      <main>
+        {/* The clock face is built by clock.ts; this is the box it lands in. */}
+        <div class="clock" id="clock"></div>
+
+        <div class="meta">
+          <p class="track" id="meta"></p>
+          <p class="status" id="status" role="status" aria-live="polite"></p>
+        </div>
+
+        <div class="controls">
+          {
+            /* Drawn, not typed: neither webface carries ◄ ►, so the two arrows
+               came from whatever the OS substituted and never matched each
+               other. */
+          }
+          <button class="step" id="prev" type="button" aria-label="previous">
+            <svg class="arrow" viewBox="0 0 12 14" aria-hidden="true"
+              ><path d="M11 0 1 7l10 7z"></path></svg
+            >
+          </button>
+          <button class="play" id="toggle" type="button" aria-label="play">
+            <span class="glyph" id="glyph" aria-hidden="true">▶</span>
+            <span class="label" id="label" aria-hidden="true">play</span>
+          </button>
+          <button class="step" id="next" type="button" aria-label="next">
+            <svg class="arrow flip" viewBox="0 0 12 14" aria-hidden="true"
+              ><path d="M11 0 1 7l10 7z"></path></svg
+            >
+          </button>
+        </div>
+      </main>
+
+      {/* The dock band: one fixed height, whatever is playing (spec §4.3). */}
+      <div class="dock" id="dock"></div>
+    </div>
+
+    {
+      /* Inlined rather than fetched: the list is small, and this keeps it out of
+        the JS bundle and off the critical path. */
+    }
+    <script id="playlist" type="application/json" is:inline set:html={JSON.stringify(tracks)} />
+    <script>
+      import "../lib/player.ts";
+    </script>
+  </body>
+</html>

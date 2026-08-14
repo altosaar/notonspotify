@@ -1,0 +1,6 @@
+dist/
+src/generated/
+public/
+package-lock.json
+# The spec is the author's document; prettier does not get to reflow it.
+spec.md

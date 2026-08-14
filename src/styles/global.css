@@ -1,0 +1,481 @@
+/* One page, one stylesheet.
+   Colour, type, spacing and the focus ring are lifted from jaan.io's
+   src/styles/tokens.css so the two sites read as siblings — same black, same
+   grey, same two typefaces, same green ring on :focus-visible. The clock is the
+   personality here; the type stays utilitarian. */
+
+@font-face {
+  font-family: "Hanken Grotesk";
+  src: url("/fonts/HankenGrotesk-latin.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: optional;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter.woff2") format("woff2");
+  font-weight: 200 700;
+  font-display: optional;
+}
+
+:root {
+  --bg: #000;
+  --text: #e2e2e2;
+  --text-muted: #9a9a96;
+  --accent: #24cb71;
+
+  --font-body: "Hanken Grotesk", "Inter", system-ui, sans-serif;
+  --font-chrome: "Inter", system-ui, sans-serif;
+
+  --fs-md: 1.3rem;
+  --fs-sm: 0.9375rem;
+  --edge: clamp(1.25rem, 5vw, 3rem);
+  --col: 560px;
+
+  /* The height of the dock band — the same for every platform, so nothing above
+     it ever moves. Decided here and never by its contents, so the page cannot
+     shift when an iframe finally loads either (spec §8: CLS 0). The floor is
+     200px because YouTube's API terms require a player at least 200×200, and
+     YouTube is the tallest of the three; the rest centre inside it. */
+  --dock-h: clamp(200px, calc(min(100vw - 2 * var(--edge), var(--col)) * 0.5625), 220px);
+
+  --dur: 225ms;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  background: var(--bg);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-variant-numeric: slashed-zero;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.app {
+  /* A definite height, not a minimum: only then do the rows resolve against the
+     viewport and let the clock take exactly the room the header, metadata,
+     controls and dock leave it. With min-height the middle row would size to
+     its content and push the dock off the bottom. 100svh is the SMALL viewport
+     — the one with the phone's toolbars showing, which is what you actually get
+     on first paint. */
+  height: 100svh;
+  display: grid;
+  /* minmax(0, 1fr), not 1fr: a plain 1fr row refuses to shrink below its
+     content, so the clock would push the dock off the bottom of short screens
+     instead of sizing itself to the room that's left. */
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  /* And minmax(0, 1fr) across, for the same reason in the other axis: the
+     metadata line is a single nowrap run of text, and an `auto` column sizes to
+     ITS max-content — so "Nocturnal Essences (Alternative Edition) — Lost
+     Traveler" widened the whole page and pushed the → button off the right edge
+     rather than truncating. Capping the column is what makes the ellipsis do
+     its job. */
+  grid-template-columns: minmax(0, 1fr);
+  width: min(100%, calc(var(--col) + 2 * var(--edge)));
+  margin-inline: auto;
+  padding-inline: var(--edge);
+  /* Keeps the dock clear of the iPhone home indicator. */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+
+/* One control, top right, and nothing else up here. */
+.bar {
+  display: flex;
+  justify-content: flex-end;
+  padding-block: 0.25rem;
+}
+
+.repeat {
+  width: 44px; /* a real tap target around a 16px mark */
+  height: 44px;
+  display: grid;
+  place-items: center;
+  color: var(--text-muted);
+}
+/* The dim lives on the icon, not the button, so the button's own hover and
+   active opacity still read in every state. */
+.repeat .repeat-icon {
+  opacity: 0.4;
+}
+.repeat.is-on {
+  color: var(--text);
+}
+.repeat.is-on .repeat-icon {
+  opacity: 1;
+}
+
+.repeat-icon {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+/* The digit sits over the loop, so it's drawn with a knock-out in the page's
+   own black first — otherwise the strokes behind it turn a "1" into a smudge at
+   20px. */
+.repeat-icon .one {
+  display: none;
+  font-family: var(--font-chrome);
+  font-size: 10px;
+  font-weight: 600;
+  text-anchor: middle;
+  fill: currentColor;
+  stroke: var(--bg);
+  stroke-width: 3px;
+  paint-order: stroke fill;
+}
+.repeat.is-one .one {
+  display: block;
+}
+
+.ask {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-chrome);
+  font-size: 1.05rem;
+  color: var(--text-muted);
+}
+
+/* ── About ──────────────────────────────────────────────────────────────── */
+
+.about {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: var(--edge);
+  border: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+.about::backdrop {
+  background: var(--bg);
+}
+
+.about .close {
+  position: absolute;
+  top: 0.25rem;
+  right: calc(var(--edge) - 0.5rem);
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  color: var(--text);
+}
+.about .close svg {
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+.credits {
+  list-style: none;
+  display: grid;
+  gap: 1.1rem;
+  justify-content: center;
+  align-content: center;
+  min-height: 100%;
+  font-size: var(--fs-md);
+  line-height: 1.3;
+  /* The lines are short; wrapping is only for the narrowest phones. */
+  overflow-wrap: anywhere;
+}
+
+/* The main site's link treatment: an underline flush with the text, and the
+   accent taking over the whole word on hover. */
+.credits a {
+  color: inherit;
+  text-decoration: none;
+  box-shadow: inset 0 -1.25px 0 0 var(--text);
+  transition:
+    background-color var(--dur) ease,
+    color var(--dur) ease,
+    box-shadow var(--dur) ease;
+}
+.credits a:hover,
+.credits a:focus-visible {
+  background-color: var(--accent);
+  color: var(--bg);
+  box-shadow: inset 0 -1.25px 0 0 var(--accent);
+  outline: none;
+}
+
+/* ── Stage ──────────────────────────────────────────────────────────────── */
+
+main {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(1.25rem, 4vh, 2.25rem);
+  min-height: 0;
+  /* Top only. Padding under the controls would sit between the play button and
+     the dock band, and the band is measured from the button's bottom edge. */
+  padding-top: clamp(0.5rem, 2vh, 1.5rem);
+}
+
+/* The clock box. Its height is whatever the rest of the page leaves — fixed,
+   and the same for every face. Each face sets its own viewBox, so a wide one
+   uses the full column, a tall one uses the full height, and a square one fits
+   the smaller of the two. Nothing here knows or cares which is on. */
+.clock {
+  position: relative;
+  min-height: 0;
+}
+
+.face {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transition: opacity var(--dur) ease;
+}
+.face.is-dim {
+  opacity: 0.6;
+}
+
+/* The vocabulary every face is drawn in (see faces/kit.ts). A new face needs no
+   new CSS: it names its parts with these and inherits every state. */
+.face .frame {
+  fill: none;
+  stroke: var(--text);
+  opacity: 0.3;
+}
+.face .frame-dot {
+  fill: var(--text);
+  stroke: none;
+  opacity: 0.16;
+}
+/* Structure that progress has passed: the tick and dot faces fill in rather
+   than draw a line, and this is how they show it. */
+.face .frame.is-lit,
+.face .frame-dot.is-lit {
+  opacity: 0.8;
+}
+.face .progress {
+  fill: none;
+  stroke: var(--text);
+  stroke-linecap: butt;
+  /* Roughly double the frame's 0.3, which is what makes "passed" read as passed
+     on the faces where progress is drawn over its own rail. */
+  opacity: 0.55;
+}
+.face .mark {
+  fill: none;
+  stroke: var(--text);
+  opacity: 0.9;
+}
+.face .dot {
+  fill: var(--text);
+  stroke: none;
+}
+
+/* The estimate tell, and the only one: this reading is a guess (spec §5.4).
+   Whichever of the two a face has, one of them is always visible — and the two
+   patterns differ so that a face which draws its progress ON its frame (the
+   dial's arc sits on the dial's ring) doesn't dissolve into one dotted circle. */
+.face.is-estimate .frame {
+  stroke-dasharray: 1 6;
+}
+.face.is-estimate .progress {
+  stroke-dasharray: 7 5;
+}
+
+/* Buffering: whatever part of this face carries the seconds. */
+.face.is-buffering .seconds {
+  animation: pulse 1.2s ease-in-out infinite;
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.15;
+  }
+}
+
+/* ── Metadata ───────────────────────────────────────────────────────────── */
+
+.meta {
+  text-align: center;
+  min-height: 3.4rem;
+}
+
+.track {
+  font-size: var(--fs-md);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status {
+  font-family: var(--font-chrome);
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  margin-top: 0.35rem;
+  min-height: 1.4em;
+}
+
+/* ── Controls ───────────────────────────────────────────────────────────── */
+
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.75rem, 6vw, 2rem);
+  /* No padding below: the dock band begins exactly at the bottom of the play
+     button, which is what the embeds are centred against. */
+}
+
+button {
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity var(--dur) ease;
+}
+button:hover {
+  opacity: 0.6;
+}
+button:active {
+  opacity: 0.35;
+}
+
+.step {
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  color: var(--text-muted);
+}
+
+.arrow {
+  width: auto;
+  height: 15px;
+  fill: currentColor;
+}
+.arrow.flip {
+  transform: scaleX(-1);
+}
+
+.play {
+  width: 112px;
+  height: 112px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0.3rem;
+  border: 1px solid var(--text);
+  border-radius: 50%;
+}
+.play .glyph {
+  font-size: 1.6rem;
+  line-height: 1;
+  /* ▶ sits optically left of centre inside a circle. */
+  transform: translateX(0.06em);
+}
+.play.is-below .glyph {
+  transform: none;
+}
+.play .label {
+  font-family: var(--font-chrome);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* ── Media dock ─────────────────────────────────────────────────────────── */
+/* The embeds are genuinely visible, at the platforms' required sizes. Hiding
+   them or shrinking them to a pixel is a terms violation and gets embeds
+   flagged — so the layout is built around them rather than around hiding them
+   (spec §4.3). Height is reserved whether or not anything is mounted. */
+
+/* One band, the same height whatever is in it — and always present, whether or
+   not anything is mounted. It runs from the bottom of the play button to the
+   bottom of the screen, and every embed is centred inside it, so switching from
+   a YouTube track to a Bandcamp one moves nothing on the page: the clock keeps
+   its size, the controls keep their place, and the tallest player (YouTube's,
+   which its terms require to be at least 200×200) sets the height for all
+   three. Everything above sizes itself around what's left. */
+.dock {
+  height: var(--dock-h);
+  display: grid;
+  place-items: center;
+  margin-inline: calc(-1 * var(--edge));
+}
+
+.dock iframe,
+.dock > div {
+  display: block;
+  border: 0;
+  width: 100%;
+  max-width: calc(var(--col) + 2 * var(--edge));
+}
+
+/* YouTube fills the band; the other two keep their own heights and sit in the
+   middle of it. */
+.dock[data-platform="youtube"] iframe,
+.dock[data-platform="youtube"] > div {
+  height: 100%;
+}
+.dock[data-platform="soundcloud"] iframe {
+  height: 166px;
+}
+.dock[data-platform="bandcamp"] iframe {
+  height: 42px;
+  max-width: min(100%, var(--col));
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

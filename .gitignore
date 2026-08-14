@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.astro/
+.wrangler/
+.DS_Store
+# Produced by scripts/resolve.ts on every build.
+src/generated/
