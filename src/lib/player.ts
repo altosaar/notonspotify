@@ -93,15 +93,27 @@ function paintMeta() {
   document.title = sounding ? `${t.title} — ${t.artist} · not on spotify` : "not on spotify";
 }
 
+/**
+ * Can this page start and stop what's in the dock? Bandcamp: no, and never.
+ * The mounted adapter is authoritative; before it mounts, the platform says.
+ */
+function drivable(): boolean {
+  return adapter ? adapter.caps.control : track().platform !== "bandcamp";
+}
+
 function paintButton() {
-  // A mounted Bandcamp track can't be driven from here, so the button stops
-  // pretending to be a play button and becomes a signpost (spec §4.4).
-  const below = adapter !== null && !adapter.caps.control;
-  const label = below ? "play below" : playing ? "pause" : "play";
+  // Bandcamp can't be driven from here, so the button stops pretending to be a
+  // play button and becomes a sign — an inert one. Disabled rather than merely
+  // ignored: a control that looks pressable and does nothing is worse than one
+  // that plainly isn't, and this way nothing (a tap, Space, a screen reader
+  // activating it) can pretend to start a track this page cannot start.
+  const below = !drivable();
+  const label = below ? "click below to play" : playing ? "pause" : "play";
   ui.glyph.textContent = below ? "↓" : playing ? "⏸" : "▶";
   ui.label.textContent = label;
   ui.toggle.setAttribute("aria-label", label);
   ui.toggle.classList.toggle("is-below", below);
+  ui.toggle.disabled = below;
 }
 
 function paintRepeat() {
@@ -220,15 +232,16 @@ function go(delta: number, autoplay: boolean, keepStatus = false) {
 }
 
 function toggle() {
+  // The button is disabled in this state, but Space routes here directly, so
+  // the rule lives here too. It does NOT focus the embed as it once did: moving
+  // focus into a cross-origin iframe fires the same window blur that a real
+  // click does, so the play button was starting the estimated clock over a
+  // track nobody had played.
+  if (!drivable()) return;
   armed = true;
   if (!adapter) {
     intent = true;
     void mount(true);
-    return;
-  }
-  if (!adapter.caps.control) {
-    // Nothing to drive — send them where the real button is.
-    ui.dock.querySelector("iframe")?.focus();
     return;
   }
   intent = !playing;
@@ -250,22 +263,13 @@ function toggle() {
 // play" as this can get. It's a guess, the clock says so by drawing its arc
 // dashed, and drift is fine: this is an art project, not a transport control.
 
-let pointerInDock = false;
-ui.dock.addEventListener("pointerenter", () => (pointerInDock = true));
-ui.dock.addEventListener("pointerleave", () => (pointerInDock = false));
-ui.dock.addEventListener("pointerdown", () => (pointerInDock = true));
-document.addEventListener(
-  "pointerdown",
-  (e) => {
-    if (!ui.dock.contains(e.target as Node)) pointerInDock = false;
-  },
-  true,
-);
-
 window.addEventListener("blur", () => {
   if (!adapter || adapter.caps.control) return; // Bandcamp is the only one that can't be driven
-  const focused = document.activeElement === ui.dock.querySelector("iframe");
-  if (!pointerInDock && !focused) return;
+  // One signal only: focus has moved INTO the dock's iframe, which is what
+  // clicking inside a cross-origin embed does and nothing else on this page can
+  // now cause. Switching tab or app leaves activeElement where it was, so
+  // neither is mistaken for pressing play.
+  if (document.activeElement !== ui.dock.querySelector("iframe")) return;
   clickThrough();
 });
 

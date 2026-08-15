@@ -418,6 +418,20 @@ button:active {
   color: var(--text-muted);
   white-space: nowrap;
 }
+/* "click below to play" is too long for one line inside the circle, so this
+   state gets two. */
+.play.is-below .label {
+  white-space: normal;
+  max-width: 96px;
+  line-height: 1.25;
+  text-align: center;
+}
+/* Inert, and looking it: no pointer, and none of the button hover or active
+   feedback that would suggest something is going to happen. */
+.play:disabled {
+  cursor: default;
+  opacity: 1;
+}
 
 /* ── Media dock ─────────────────────────────────────────────────────────── */
 /* The embeds are genuinely visible, at the platforms' required sizes. Hiding

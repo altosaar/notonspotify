@@ -99,9 +99,15 @@ Cloudflare Pages. Build command `npm run build`, output `dist/`.
 - **Bandcamp is still tier 2, and this was checked rather than assumed.** Their
   player bundle registers no message listener, so there is no inbound channel;
   the one autoplay branch in it is gated on a `facebook.com` parameter that the
-  server parses but that never fires playback for a third-party embed. So the
-  big button reads `play below` and you press play inside their player. Doing
+  server parses but that never fires playback for a third-party embed. Doing
   better would mean scraping stream URLs, which is off the table.
+- **So on a Bandcamp track the big button is a sign, not a control.** It reads
+  `click below to play` and is genuinely `disabled` — a tap, Space, or a screen
+  reader activating it all do nothing. It used to focus the embed, which fired
+  the same window blur a real click does, and so started the estimated clock
+  over a track nobody had played. Only a click inside Bandcamp's own player
+  starts anything now: the click-through detector asks whether focus has moved
+  INTO the dock's iframe, which switching tab or app cannot fake.
 - **The repeat control is the whole header.** Top right, three states, cycling on
   each press and remembered between visits: **off** (a finished track stops
   there), **repeat** (on to the next one), **repeat one** (the same track again
@@ -114,6 +120,11 @@ Cloudflare Pages. Build command `npm run build`, output `dist/`.
   began — which is why every Bandcamp entry gets a duration whether or not
   `tracks.yaml` gives it one. **Repeat one** does nothing on Bandcamp: its embed
   can't be restarted any more than it can be started.
+- **Nothing can autoplay a Bandcamp track**, by four independent locks: the
+  adapter reports `caps.control: false` and every `play()` call in the app is
+  gated on it; the adapter's own `play()` is an empty function; the embed URL
+  carries no autoplay parameter; and the iframe is given no `allow="autoplay"`,
+  so it cannot borrow this page's user activation either.
 - **Repeat still can't start a Bandcamp track for you.** If it hands off into
   one, the record is on screen and waiting for one tap. Nothing on the open web
   can do better with their embed.

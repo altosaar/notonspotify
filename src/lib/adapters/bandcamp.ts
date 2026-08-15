@@ -23,6 +23,9 @@ export function bandcamp(): PlayerAdapter {
         `https://bandcamp.com/EmbeddedPlayer/${track.embedRef}/` +
         "size=small/bgcol=000000/linkcol=24cb71/transparent=true/";
       frame.title = `${track.title} on Bandcamp`;
+      // Deliberately no `allow="autoplay"`: without that delegation the embed
+      // cannot start itself off this page's user activation, only off a click
+      // of its own. One more lock on a door that is already shut.
       frame.setAttribute("frameborder", "0");
       frame.addEventListener("load", () => bus.emit("ready"), { once: true });
       host.append(frame);
