@@ -344,9 +344,14 @@ main {
 .mirror.is-dim {
   opacity: 0.6;
 }
+/* The transform is load-bearing: it makes this the containing block for any
+   `position: fixed` inside a mirror. Two of the forty use it, and without this
+   such a clock is positioned against the window instead — covering the whole
+   page, controls and all, rather than sitting in its box. */
 .mirror-box {
   position: relative;
   overflow: hidden;
+  transform: translate(0);
 }
 
 /* The estimate tell, and the only one: this reading is a guess (spec §5.4).

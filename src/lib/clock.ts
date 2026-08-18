@@ -7,7 +7,10 @@
  * only knows how far into the track it is and where the track sits in the
  * playlist.
  */
+import { flushSync } from "svelte";
 import { FACES, type Face } from "./faces/index.ts";
+import { noTextOf, speedOf } from "./faces/eligible.ts";
+import { stripWords } from "./faces/clocksdev/plain.ts";
 import type { FaceInput, FaceUpdate } from "./faces/kit.ts";
 
 export type ClockMode = "idle" | "playing" | "paused" | "buffering";
@@ -66,6 +69,10 @@ export function createClock(
    */
   const pinned = FACES.find((f) => f.name === location.hash.replace("#face=", ""));
 
+  /** 10x winds the seconds on; the hour is the playlist's and never changes pace. */
+  const scaled = (input: FaceInput, speed: number): FaceInput =>
+    speed === 1 ? input : { ...input, elapsed: input.elapsed * speed };
+
   /** What the face would be told right now — mount and paint agree on it. */
   const now = (): FaceInput => {
     const e = mode === "idle" ? 0 : elapsed();
@@ -95,8 +102,21 @@ export function createClock(
     root = box;
 
     try {
-      const handle = face.mount(box, now());
-      draw = handle.update;
+      // faces.json's two adjustments, applied here rather than inside the face:
+      // the face draws whatever time it is handed and knows nothing about the
+      // file, so there is exactly one place either of these can be applied.
+      const speed = speedOf(face.name);
+      const plain = noTextOf(face.name);
+      const handle = face.mount(box, scaled(now(), speed));
+      draw = (input) => {
+        handle.update(scaled(input, speed));
+        if (!plain) return;
+        // Svelte writes the DOM on a microtask, so the words are not there to
+        // strip until it has. Flushed rather than deferred so a frame is never
+        // shown with the text still on it.
+        flushSync();
+        stripWords(handle.root);
+      };
       teardown = handle.destroy;
     } catch (error) {
       // Forty components this site did not write. One that throws on the way up

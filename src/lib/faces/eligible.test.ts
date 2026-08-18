@@ -5,10 +5,10 @@
  */
 import { describe, expect, it } from "vitest";
 import config from "../../../faces.json";
-import { ELIGIBLE_NAMES, speedOf } from "./eligible.ts";
+import { ELIGIBLE_NAMES, noTextOf, speedOf } from "./eligible.ts";
 import { MIRROR_NAMES } from "./clocksdev/names.ts";
 
-const choices = config as Record<string, { include?: boolean; x10?: boolean }>;
+const choices = config as Record<string, { include?: boolean; x10?: boolean; notext?: boolean }>;
 
 describe("faces.json", () => {
   it("only ever names real faces", () => {
@@ -32,6 +32,16 @@ describe("faces.json", () => {
     for (const name of MIRROR_NAMES) {
       expect(speedOf(name)).toBe(choices[name]?.x10 ? 10 : 1);
     }
+  });
+
+  it("strips the words only where it was asked for", () => {
+    for (const name of MIRROR_NAMES) {
+      expect(noTextOf(name)).toBe(choices[name]?.notext === true);
+    }
+  });
+
+  it("leaves a face nobody has judged yet alone", () => {
+    expect(noTextOf("cd-not-in-the-file-yet")).toBe(false);
   });
 
   it("leaves something to deal", () => {

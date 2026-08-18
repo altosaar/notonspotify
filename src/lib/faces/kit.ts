@@ -27,6 +27,9 @@ export interface FaceInput {
 export type FaceUpdate = (input: FaceInput) => void;
 
 export interface FaceHandle {
+  /** What the face drew into, for a caller that needs to act on it — stripping
+   *  the words off a `notext` face, say. */
+  root: HTMLElement;
   update: FaceUpdate;
   destroy(): void;
 }

@@ -182,8 +182,11 @@ Not all forty suit this page, and some barely move at the speed a track runs at.
 npm run dev        # then open /faces/1
 ```
 
-Ten clocks a page, all running. Two checkboxes each: **include**, and **10×** for
-one that is too still to read otherwise. **❚❚** freezes the page, **10×** at the
+Ten clocks a page, all running, each numbered by its place in `faces.json`.
+Three checkboxes each: **include**, **10×** for one too still to read otherwise,
+and **numbers only** for one that is as much poster as clock — that last strips
+every run of text with no digit in it, in the mounted DOM, leaving the layout and
+the time. **❚❚** freezes the page, **10×** at the
 top ticks all ten at once, and **faces.json** copies the result to the clipboard
 — paste it over [`faces.json`](./faces.json) at the root, which is what the build
 reads. Selections survive page changes (localStorage), so all four pages are one
@@ -191,7 +194,7 @@ sitting.
 
 `faces.json` is the only thing that matters afterwards: `include: false` and a
 clock is never dealt to a track, `x10: true` and its seconds run ten times faster
-on the live site. A face missing from the file is included at 1×, so a newly
+on the live site, `notext: true` and only its numbers survive. A face missing from the file is included at 1×, so a newly
 mirrored clock shows up rather than vanishing. Turning them all off fails the
 build rather than shipping an empty clock.
 

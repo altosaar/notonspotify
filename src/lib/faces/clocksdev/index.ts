@@ -16,12 +16,11 @@
  * a file, the same as it is for a hand-written face.
  */
 import type { Component } from "svelte";
-import type { Face, FaceInput } from "../kit.ts";
+import type { Face } from "../kit.ts";
 import { clockTime, type ClockTime } from "./time.ts";
 import { mountClock } from "./mount.svelte.ts";
 import manifest from "./manifest.json";
 import { mirrorName } from "./names.ts";
-import { speedOf } from "../eligible.ts";
 
 interface Entry {
   slug: string;
@@ -67,23 +66,22 @@ export const MIRRORED: Face[] = (manifest as Entry[]).flatMap((entry) => {
   return [
     {
       name: mirrorName(entry.slug),
+      // Deliberately knows nothing about faces.json. It used to read the 10x
+      // flag itself, which meant the picker — winding its own preview forward
+      // ten times faster — got a hundred. What the clock is told is the
+      // caller's business; this only draws it.
       mount(host, initial) {
         const box = document.createElement("div");
         box.className = "mirror-box";
         Object.assign(box.style, shape(entry));
         host.append(box);
 
-        // Some of these barely move at the speed a track runs at, so faces.json
-        // can wind one forward ten times faster. Applied to the seconds only —
-        // the hour hand is the playlist's and has nothing to do with pace.
-        const speed = speedOf(mirrorName(entry.slug));
-        const at = (input: FaceInput) => clockTime({ ...input, elapsed: input.elapsed * speed });
-
         // Mounted already showing the track's time — at rest that is 00:00:00 —
         // rather than at some default it then corrects away from.
-        const mounted = mountClock(module.default, box, at(initial));
+        const mounted = mountClock(module.default, box, clockTime(initial));
         return {
-          update: (input) => mounted.set(at(input)),
+          root: box,
+          update: (input) => mounted.set(clockTime(input)),
           destroy: () => mounted.destroy(),
         };
       },

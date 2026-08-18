@@ -25,6 +25,7 @@ export function getStaticPaths() {
 interface Choice {
   include?: boolean;
   x10?: boolean;
+  notext?: boolean;
 }
 
 // Read, not imported: an import is cached by the module graph and would go stale
@@ -46,6 +47,7 @@ const names = entries.slice(index * PER_PAGE, (index + 1) * PER_PAGE).map((entry
     number: at + 1,
     include: saved[name]?.include !== false,
     x10: saved[name]?.x10 === true,
+    notext: saved[name]?.notext === true,
     // The hour hand is a track's place in the playlist; here it is the clock's
     // place in the forty, so no two on a page sit at the same hour.
     hours: (at / entries.length) * 12,
@@ -63,7 +65,15 @@ const title = `faces ${index + 1} of ${pages}`;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
-    <style>
+    {
+      /* Global, not scoped. Astro scopes a page's styles by stamping a
+         data-astro-cid attribute on the markup, which leaves out both the
+         document itself (so `body` padding never applied, and the first row of
+         clocks sat under the toolbar) and anything built in JavaScript — which
+         is every mounted face. This page is a whole document of its own and has
+         nothing to isolate itself from. */
+    }
+    <style is:global>
       :root {
         color-scheme: dark;
         --line: #2a2a2a;
@@ -163,9 +173,15 @@ const title = `faces ${index + 1} of ${pages}`;
         place-items: center;
         overflow: hidden;
       }
+      /* A transform makes this the containing block for `position: fixed`
+         descendants. Two of the forty use it, and without this they are
+         positioned against the window instead — a full-page overlay that hid
+         the other nine tiles on one page and swallowed every click on another,
+         checkboxes included. */
       .mirror-box {
         position: relative;
         overflow: hidden;
+        transform: translate(0);
       }
       /* A component that throws still gets a tile, so the grid keeps its shape
          and the checkboxes under it still work. */
@@ -242,6 +258,9 @@ const title = `faces ${index + 1} of ${pages}`;
               <label title="10×">
                 <input class="ten" type="checkbox" data-name={face.name} checked={face.x10} />
               </label>
+              <label title="numbers only">
+                <input class="txt" type="checkbox" data-name={face.name} checked={face.notext} />
+              </label>
               <span class="who">
                 {face.title} · {face.author || "—"}
               </span>
@@ -254,11 +273,14 @@ const title = `faces ${index + 1} of ${pages}`;
     <script id="page-faces" type="application/json" is:inline set:html={JSON.stringify(names)} />
     <script id="page-saved" type="application/json" is:inline set:html={JSON.stringify(saved)} />
     <script>
+      import { flushSync } from "svelte";
       import { MIRRORED } from "../../lib/faces/clocksdev/index.ts";
+      import { stripWords } from "../../lib/faces/clocksdev/plain.ts";
 
       interface Choice {
         include: boolean;
         x10: boolean;
+        notext: boolean;
       }
 
       const el = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -294,8 +316,12 @@ const title = `faces ${index + 1} of ${pages}`;
 
       for (const input of document.querySelectorAll<HTMLInputElement>("input[data-name]")) {
         const name = input.dataset.name!;
-        const key = input.classList.contains("inc") ? "include" : "x10";
-        choices[name] ??= { include: true, x10: false };
+        const key = input.classList.contains("inc")
+          ? "include"
+          : input.classList.contains("ten")
+            ? "x10"
+            : "notext";
+        choices[name] ??= { include: true, x10: false, notext: false };
         input.addEventListener("change", () => {
           choices[name] = { ...choices[name]!, [key]: input.checked };
           save();
@@ -350,9 +376,16 @@ const title = `faces ${index + 1} of ${pages}`;
         for (const face of running) {
           // Each clock keeps its own elapsed time, so turning 10× on winds it
           // forward from here rather than jumping it.
-          if (!paused) face.t += dt * (choices[face.name]?.x10 ? 10 : 1);
+          // Read live off the checkboxes, so both settings show their effect the
+          // moment they are ticked. The face itself applies neither.
+          const choice = choices[face.name];
+          if (!paused) face.t += dt * (choice?.x10 ? 10 : 1);
           try {
             face.handle.update({ elapsed: face.t, hours: face.hours });
+            if (choice?.notext) {
+              flushSync();
+              stripWords(face.handle.root);
+            }
           } catch {
             // A throw here would kill the loop and freeze every clock on the page.
           }
