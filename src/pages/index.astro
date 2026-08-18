@@ -107,14 +107,16 @@ const og = new URL("/og.png", Astro.site).href;
         <section class="attrib">
           <h2>clock faces</h2>
           <p>
-            Eight are drawn for this site. The other {mirrors.length} are mirrored, unmodified, from
-            <a href="https://clocks.dev/">clocks.dev</a>, and belong to the {byAuthor.length} people below.
+            All {mirrors.length} of them are mirrored, unmodified, from
+            <a href="https://clocks.dev/">clocks.dev</a> — the whole of it — and were made by the {
+              byAuthor.length
+            } people below. One per track, a different set each time the site is built.
           </p>
           <p class="notice">
-            No licence is attached to any of them — clocks.dev states no terms and none of the
-            sources carries a notice — so they are used here with attribution and without a grant of
-            permission. If you made one and would rather it weren't here, mail{" "}
-            <a href="mailto:j@jaan.io?subject=clocks.dev%20face">j@jaan.io</a> and it comes out.
+            <a href="https://clocks.dev/create">clocks.dev</a> releases every published clock into the
+            public domain — “anyone may use, modify, and share it”. Nobody here is owed a credit, then.
+            They are named anyway, because someone drew each of these and a public domain dedication gives
+            away the copyright, not the authorship.
           </p>
           <ul class="authors">
             {

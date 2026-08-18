@@ -7,17 +7,16 @@
  * vocabulary next door. `manifest.json` carries who made each one and where
  * they are, and the about panel prints all of it.
  *
- * NO LICENCE IS ATTACHED TO ANY OF THEM. clocks.dev states no terms, the API
- * exposes no licence field, and not one of the forty sources carries a notice,
- * so each is its author's work under default copyright. They are mirrored here
- * at the site owner's direction, with attribution in full and nothing implied
- * about permission. See README ("Mirrored clocks").
+ * They are public domain: clocks.dev has authors agree, on publishing, to
+ * "release your clock's code into the public domain, where anyone may use,
+ * modify, and share it". Attribution is kept anyway — a public domain
+ * dedication gives away the copyright, not the authorship.
  *
  * Globbed rather than imported one by one so that adding or dropping a mirror is
  * a file, the same as it is for a hand-written face.
  */
 import type { Component } from "svelte";
-import { shuffled, type FaceInput, type MountFace } from "../kit.ts";
+import type { Face } from "../kit.ts";
 import { clockTime, type ClockTime } from "./time.ts";
 import { mountClock } from "./mount.svelte.ts";
 import manifest from "./manifest.json";
@@ -61,27 +60,23 @@ function shape(entry: Entry): Partial<CSSStyleDeclaration> {
   };
 }
 
-export const MIRRORED: MountFace[] = (manifest as Entry[]).flatMap((entry) => {
+export const MIRRORED: Face[] = (manifest as Entry[]).flatMap((entry) => {
   const module = components[`./${entry.slug}.svelte`];
   if (!module) return [];
   return [
     {
       name: mirrorName(entry.slug),
-      mount(host, rnd) {
-        // Which layer drives which hand, drawn once and held for as long as this
-        // face is worn — the same trick the hand-written faces play with their
-        // parts, and the reason one mirror reads differently from track to track.
-        const carries = shuffled(rnd, [0, 1, 2]);
-
+      mount(host, initial) {
         const box = document.createElement("div");
         box.className = "mirror-box";
         Object.assign(box.style, shape(entry));
         host.append(box);
 
-        const at = (input: FaceInput) => clockTime(input, carries);
-        const mounted = mountClock(module.default, box, at({ track: 0, fast: 0, seconds: 0 }));
+        // Mounted already showing the track's time — at rest that is 00:00:00 —
+        // rather than at some default it then corrects away from.
+        const mounted = mountClock(module.default, box, clockTime(initial));
         return {
-          update: (input) => mounted.set(at(input)),
+          update: (input) => mounted.set(clockTime(input)),
           destroy: () => mounted.destroy(),
         };
       },

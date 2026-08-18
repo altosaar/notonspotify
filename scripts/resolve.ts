@@ -23,7 +23,6 @@ import type { Platform, ResolvedTrack } from "../src/lib/adapters/types.ts";
 // script runs under plain Node. One list, so the deal can never name a face the
 // browser doesn't have.
 import { FACE_NAMES } from "../src/lib/faces/names.ts";
-import { shuffled } from "../src/lib/faces/kit.ts";
 
 const ROOT = resolvePath(dirname(fileURLToPath(import.meta.url)), "..");
 const IN = resolvePath(ROOT, "tracks.yaml");
@@ -262,11 +261,21 @@ async function resolveOne(input: TrackInput): Promise<ResolvedTrack> {
  * library passes the track count that branch stops running by itself and every
  * track gets a genuinely unique one.
  */
+/** Fisher-Yates, on a copy. Lives here now that the faces share no helpers. */
+function shuffled<T>(input: T[]): T[] {
+  const out = [...input];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j]!, out[i]!];
+  }
+  return out;
+}
+
 function dealFaces(count: number): string[] {
   const library = [...FACE_NAMES];
   const out: string[] = [];
   while (out.length < count) {
-    const round = shuffled(Math.random, library);
+    const round = shuffled(library);
     const previous = out.at(-1);
     // Only possible at a seam, and only when the shuffle happens to repeat the
     // face that just ended the last round.

@@ -85,10 +85,18 @@ const track = () => tracks[index]!;
 
 // Below `track` on purpose: the clock has to be handed the face this track was
 // dealt at build time, and that isn't knowable until `index` and `track` exist.
+/**
+ * The hour hand: track n of N sits at n/N × 12, so the hour says how far
+ * through the PLAYLIST you are and holds still for the length of a track. The
+ * minutes and seconds under it are the track's own, from zero.
+ */
+const playlistHours = () => (index / tracks.length) * 12;
+
 const clock = createClock(
   ui.clock,
   (label) => ui.clock.firstElementChild?.setAttribute("aria-label", label),
   track().face,
+  playlistHours(),
 );
 
 // ── Rendering ───────────────────────────────────────────────────────────────
@@ -255,7 +263,7 @@ function go(delta: number, autoplay: boolean, keepStatus = false) {
   index = (index + delta + tracks.length) % tracks.length;
   // New track, new face: which hand carries which layer of time, and where each
   // one starts, is drawn fresh here and holds for as long as this track does.
-  clock.shuffle(track().face);
+  clock.shuffle(track().face, playlistHours());
   if (!keepStatus) {
     status("");
     errors = 0; // a deliberate move is a fresh start for the error streak

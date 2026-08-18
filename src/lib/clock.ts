@@ -1,14 +1,14 @@
 /**
- * The clock: the mapping from seconds to the three numbers a face draws, the
- * animation loop, and the draw for which face wears them.
+ * The clock: what time a face is told it is, the animation loop, and which face
+ * is wearing it.
  *
- * Faces live in ./faces — each one builds its own SVG, sets its own shape, and
- * randomises its own start positions. This file has no opinion about how a
- * clock looks; it only knows what time it is and which face is on.
+ * Faces live in ./faces/clocksdev — forty components mirrored from clocks.dev,
+ * each mounting itself. This file has no opinion about how a clock looks; it
+ * only knows how far into the track it is and where the track sits in the
+ * playlist.
  */
 import { FACES, type Face } from "./faces/index.ts";
-import { DRAWN } from "./faces/drawn.ts";
-import { isMounted, type FaceInput, type FaceUpdate } from "./faces/kit.ts";
+import type { FaceInput, FaceUpdate } from "./faces/kit.ts";
 
 export type ClockMode = "idle" | "playing" | "paused" | "buffering";
 
@@ -21,10 +21,6 @@ export interface ClockPatch {
   /** Bandcamp's estimated progress — same maths, and the face says so. */
   estimate?: boolean;
 }
-
-/** One turn per ten seconds of playback: fast enough to be obviously not the
- *  seconds hand, slow enough to read. */
-const FAST_PERIOD = 10;
 
 const REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)");
 
@@ -42,20 +38,24 @@ export function createClock(
   host: HTMLElement,
   onLabel: (label: string) => void,
   /** The face the opening track was dealt. Wearing one is the constructor's job
-   *  because `svg` and `draw` have no meaningful empty state — nothing may paint
-   *  before a face is on. */
+   *  because `root` and `draw` have no meaningful empty state — nothing may
+   *  paint before a face is on. */
   initialFace: string,
+  /** The opening track's place in the playlist, in hours. */
+  initialHours: number,
 ) {
   let mode: ClockMode = "idle";
   let estimate = false;
   let duration = 0;
   let base = 0; // seconds, at the last anchor
   let at = performance.now(); // when that anchor was set
+  /** Where the current track sits in the playlist, as a fraction of twelve.
+   *  Holds still for the length of a track; the hour hand and nothing else. */
+  let hours = 0;
 
-  // The root the face lives in — an <svg> for the ones drawn here, a plain box
-  // for a mounted component. Only the state classes are put on it, so the two
-  // kinds need not have anything else in common.
-  let root: Element;
+  // The box the mounted face lives in. Only the state classes go on it — a
+  // mirror brings all of its own markup.
+  let root: HTMLElement;
   let draw: FaceUpdate;
   let teardown: (() => void) | null = null;
   let current: Face | null = null;
@@ -66,48 +66,52 @@ export function createClock(
    */
   const pinned = FACES.find((f) => f.name === location.hash.replace("#face=", ""));
 
-  function wear(face: Face) {
+  /** What the face would be told right now — mount and paint agree on it. */
+  const now = (): FaceInput => {
+    const e = mode === "idle" ? 0 : elapsed();
+    // Reduced motion steps a second at a time where the clocks would otherwise
+    // sweep. It is the one place this file changes the shape of the motion, and
+    // only for people who asked for that.
+    return { elapsed: REDUCED.matches ? Math.floor(e) : e, hours };
+  };
+
+  function wear(face: Face, tried: Set<string> = new Set()) {
     // A mounted component goes on running its effects until it is unmounted, so
-    // the outgoing face is always taken down first — dropping the node is enough
-    // for an <svg> and nowhere near enough for a component.
+    // the outgoing face is always taken down first. Dropping the node is not
+    // enough.
     teardown?.();
     teardown = null;
     current = face;
+    tried.add(face.name);
 
-    if (isMounted(face)) {
-      const box = document.createElement("div");
-      box.className = "mirror";
-      box.setAttribute("role", "img");
-      box.setAttribute("aria-label", "clock");
-      box.dataset.face = face.name;
-      // In the document before mounting: several of the mirrors measure
-      // themselves as they start up, and a detached node measures zero.
-      host.replaceChildren(box);
-      try {
-        const handle = face.mount(box, Math.random);
-        draw = handle.update;
-        teardown = handle.destroy;
-        root = box;
+    const box = document.createElement("div");
+    box.className = "mirror";
+    box.setAttribute("role", "img");
+    box.setAttribute("aria-label", "clock");
+    box.dataset.face = face.name;
+    // In the document before mounting: several of the mirrors measure themselves
+    // as they start up, and a detached node measures zero.
+    host.replaceChildren(box);
+    root = box;
+
+    try {
+      const handle = face.mount(box, now());
+      draw = handle.update;
+      teardown = handle.destroy;
+    } catch (error) {
+      // Forty components this site did not write. One that throws on the way up
+      // would leave a blank box for the whole of its track, so another face gets
+      // a turn and the console carries the reason.
+      console.warn(`face ${face.name} failed to mount, falling back`, error);
+      const rest = FACES.filter((f) => !tried.has(f.name));
+      // Every face failing means something is wrong with the page, not with a
+      // clock: better an empty box than a stack overflow behind it.
+      if (rest.length === 0) {
+        draw = () => {};
         return;
-      } catch (error) {
-        // The mirrors are forty components this site did not write and cannot
-        // test by eye. One that throws on the way up takes its track's clock
-        // down with it, which is a blank box for the whole of that track — so it
-        // falls back to a face that is known to work and says so in the console
-        // rather than on the page.
-        console.warn(`face ${face.name} failed to mount, falling back`, error);
-        return wear(DRAWN[Math.floor(Math.random() * DRAWN.length)]!);
       }
+      wear(rest[Math.floor(Math.random() * rest.length)]!, tried);
     }
-
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("class", "face");
-    svg.setAttribute("role", "img");
-    svg.setAttribute("aria-label", "clock");
-    svg.dataset.face = face.name;
-    draw = face.build(svg, Math.random);
-    host.replaceChildren(svg);
-    root = svg;
   }
 
   const elapsed = () => {
@@ -118,26 +122,10 @@ export function createClock(
   let lastLabelAt = 0;
   function paint() {
     const reduced = REDUCED.matches;
-    let input: FaceInput;
-
-    if (mode === "idle") {
-      // At rest. This clock measures a track, so with no track running there is
-      // nothing for it to be doing: every layer sits at zero, which leaves each
-      // face showing the starting positions it drew for itself.
-      input = { track: 0, fast: 0, seconds: 0 };
-    } else {
-      const e = elapsed();
-      const now = Date.now() / 1000;
-      input = {
-        track: duration ? e / duration : null,
-        fast: (e % FAST_PERIOD) / FAST_PERIOD,
-        // Real seconds — the one layer that keeps moving on a fifty-minute
-        // track. Under reduced motion it steps rather than sweeps.
-        seconds: ((reduced ? Math.floor(now) : now) % 60) / 60,
-      };
-    }
-
-    draw(input);
+    // At rest the clock reads 00:00:00 — this one measures a track, so with no
+    // track running there is nothing for it to be counting. The hour hand still
+    // shows where in the playlist you are, because that is true either way.
+    draw(now());
     root.classList.toggle("is-dim", mode === "paused");
     root.classList.toggle("is-estimate", estimate);
     root.classList.toggle("is-buffering", mode === "buffering" && !reduced);
@@ -181,7 +169,8 @@ export function createClock(
    * face was renamed or removed would otherwise leave the clock blank, and a
    * missing face is not worth a broken page.
    */
-  function shuffle(name?: string) {
+  function shuffle(name: string | undefined, atHours: number) {
+    hours = atHours;
     if (pinned) {
       if (!current) wear(pinned);
       paint();
@@ -193,7 +182,7 @@ export function createClock(
     paint();
   }
 
-  shuffle(initialFace);
+  shuffle(initialFace, initialHours);
 
   return {
     set(patch: ClockPatch) {
@@ -224,7 +213,8 @@ export function createClock(
         schedule();
       }
     },
-    /** Wear a named face. Called once per track, by the player. */
+    /** Wear a named face, and set the hour hand to that track's place in the
+     *  playlist. Called once per track, by the player. */
     shuffle,
     /** Seconds into the track right now. */
     elapsed,

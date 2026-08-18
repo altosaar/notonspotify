@@ -324,90 +324,47 @@ main {
   min-height: 0;
 }
 
-.face,
+/* Every face is a mirrored clocks.dev component now, mounted into this box.
+   Nothing here styles a component's insides: they are copies, and their class
+   names (.dot, .frame, .seconds, .progress) are ordinary words that this
+   stylesheet has no business reaching into. The box gets a shape and the state
+   tells; the clock inside it is the author's. */
 .mirror {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  transition: opacity var(--dur) ease;
-}
-.face.is-dim,
-.mirror.is-dim {
-  opacity: 0.6;
-}
-
-/* The mirrored clocks.dev faces. Deliberately NOT `.face`: the vocabulary rules
-   below reach in by class name (.frame, .dot, .mark, .progress, .seconds), and
-   those are ordinary words that turn up inside other people's components too.
-   A mirror is a copy or it is nothing, so nothing here styles its insides — it
-   gets a box the right shape and the same dim, and that is the lot. */
-.mirror {
   display: grid;
   place-items: center;
   /* Their own backgrounds are part of the design and several are not black, so
      the box clips them to its own corners rather than bleeding to the edges. */
   overflow: hidden;
+  transition: opacity var(--dur) ease;
+}
+.mirror.is-dim {
+  opacity: 0.6;
 }
 .mirror-box {
   position: relative;
   overflow: hidden;
 }
 
-/* The vocabulary every face is drawn in (see faces/kit.ts). A new face needs no
-   new CSS: it names its parts with these and inherits every state. */
-.face .frame {
-  fill: none;
-  stroke: var(--text);
-  opacity: 0.3;
-}
-.face .frame-dot {
-  fill: var(--text);
-  stroke: none;
-  opacity: 0.16;
-}
-/* Structure that progress has passed: the tick and dot faces fill in rather
-   than draw a line, and this is how they show it. */
-.face .frame.is-lit,
-.face .frame-dot.is-lit {
-  opacity: 0.8;
-}
-.face .progress {
-  fill: none;
-  stroke: var(--text);
-  stroke-linecap: butt;
-  /* Roughly double the frame's 0.3, which is what makes "passed" read as passed
-     on the faces where progress is drawn over its own rail. */
-  opacity: 0.55;
-}
-.face .mark {
-  fill: none;
-  stroke: var(--text);
-  opacity: 0.9;
-}
-.face .dot {
-  fill: var(--text);
-  stroke: none;
-}
-
 /* The estimate tell, and the only one: this reading is a guess (spec §5.4).
-   Whichever of the two a face has, one of them is always visible — and the two
-   patterns differ so that a face which draws its progress ON its frame (the
-   dial's arc sits on the dial's ring) doesn't dissolve into one dotted circle. */
-.face.is-estimate .frame {
-  stroke-dasharray: 1 6;
-}
-.face.is-estimate .progress {
-  stroke-dasharray: 7 5;
+   It used to be drawn into the face — a dashed arc, a dashed ring — which is
+   not available now that the faces belong to other people. So the tell moved
+   out to the box around them: same promise kept, without editing a copy. */
+.mirror.is-estimate .mirror-box {
+  outline: 1px dashed var(--text-muted);
+  outline-offset: -1px;
 }
 
-/* Buffering: whatever part of this face carries the seconds. */
-.face.is-buffering .seconds {
+/* Buffering. Also the whole box, for the same reason. */
+.mirror.is-buffering {
   animation: pulse 1.2s ease-in-out infinite;
 }
 @keyframes pulse {
   50% {
-    opacity: 0.15;
+    opacity: 0.45;
   }
 }
 
@@ -467,11 +424,10 @@ main {
    dot again, and a slow pulse. `currentColor` for the glow, so the colour is set
    in exactly one place.
 
-   NOT `.dot` — that belongs to the clock faces (see faces/kit.ts: "a moving
-   filled part"), and a bare `.dot` here put a 1.6s pulse and a 6px box on every
-   moving dot in orbits, dial, triangle and ticks. Nothing for specificity to
-   settle, either: these are different properties than `.face .dot` sets, so
-   they simply applied. */
+   NOT `.dot`: a bare `.dot` here is a global rule, and the forty mirrored
+   components are other people's markup full of ordinary class names — several
+   of them do have a `.dot`. It reached into the clock faces once already and
+   put a 1.6s pulse on every moving dot in four of them. */
 .banger-dot {
   width: 6px;
   height: 6px;

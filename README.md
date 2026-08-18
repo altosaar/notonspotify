@@ -68,12 +68,10 @@ Cloudflare Pages. Build command `npm run build`, output `dist/`.
   so with no track running it sits at rest — arc empty — rather than filling in
   as a wall clock. Nothing animates until there is something to animate: no
   timers run behind an idle page.
-- **Every track gets its own clock, and no two share one.** The library is 48
-  faces — eight drawn here, forty mirrored from clocks.dev. `resolve.ts` deals
-  one per track at build time, without replacement, so a build with 23 tracks
-  uses 23 different faces and a rebuild deals a new set. Which layer of time each
-  face's parts carry is still drawn in the browser, per track, so the same face
-  reads as a different instrument each time it comes round.
+- **Every track gets its own clock, and no two share one.** The library is all
+  40 of clocks.dev. `resolve.ts` deals one per track at build time, without
+  replacement, so a build with 23 tracks uses 23 different clocks and a rebuild
+  deals a new set.
 - **The faces have different shapes**, and the room they get does not change:
   the clock box is a fixed height, and each face's viewBox scales inside it. A
   wide one (`bars`, `grid`) uses the full column, a tall one (`column`) uses the
@@ -149,19 +147,28 @@ Svelte, which is the only reason this project has a Svelte dependency at all.
 Nothing is server-rendered by it; `clock.ts` mounts one component at a time into
 the clock box.
 
-**No licence is attached to any of them.** clocks.dev states no terms, its API
-exposes no licence field, and not one of the forty sources carries a notice — so
-each is its author's work under default copyright, all rights reserved. They are
-mirrored here at the site owner's direction, with every author named in the about
-panel and nothing implied about permission having been granted. Twenty-three
-people made them. If one of them objects, the fix is deleting a file.
+**They are public domain.** clocks.dev's publish flow has authors agree to
+"release your clock's code into the public domain, where anyone may use, modify,
+and share it" ([clocks.dev/create](https://clocks.dev/create)), so mirroring them
+verbatim is exactly what the terms allow. Every author is still named in the
+about panel: a public domain dedication gives away the copyright, not the
+authorship, and twenty-three people drew these.
 
 The one seam between those components and this site is `time.ts`. They ask for an
-hour, a minute and a second; what they get is **track** time, not wall time —
-which layer drives which hand is drawn per mounted face, the same way the
-hand-written faces choose what their parts carry. Their own `time.progress.*`
-contract (the sub-unit fractions six of them sweep on) is honoured exactly. So
-the components are untouched copies and the site still tells track time.
+hour, a minute and a second; what they get is **track** time:
+
+- **seconds and minutes** are the track, running. Zero when it starts, counting
+  up in real time, so a clock reads `00:00:00` the moment a track does.
+- **hours** are the _playlist_. Track n of N puts the hour hand at `n / N × 12`,
+  so the hour says how far through the list you are and holds still for the
+  length of a track.
+- the **sub-second** is real and unrounded, which is what makes the sweep smooth:
+  every one of these animates off `millisecond` or off `progress.*`, and both
+  come straight off the same fractional elapsed time. Their own `time.progress.*`
+  contract — the sub-unit fractions six of them sweep on — is an object, not a
+  number, and is honoured exactly.
+
+So the components are untouched copies and the site still tells track time.
 
 `npm test` mounts all forty, drives them through a track, and unmounts them.
 Nobody here can look at forty clocks; CI can at least prove none of them throws
