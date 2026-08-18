@@ -22,6 +22,10 @@
   --text: #e2e2e2;
   --text-muted: #9a9a96;
   --accent: #24cb71;
+  /* The only red on the page, and it appears on exactly one track. Siren, not
+     error: it has to hold its own next to the green ring without reading as
+     something being wrong. */
+  --siren: #ff2f2f;
 
   --font-body: "Hanken Grotesk", "Inter", system-ui, sans-serif;
   --font-chrome: "Inter", system-ui, sans-serif;
@@ -332,15 +336,77 @@ main {
 
 .meta {
   text-align: center;
-  min-height: 3.4rem;
+}
+
+/* Title and artist are two lines now, not one run of "title — artist". Both
+   truncate on their own, so a long title no longer eats the artist's name — and
+   both are nowrap for the same reason the column is capped: a wrapping line here
+   would change the height of this block and move the clock. */
+.track,
+.artist {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .track {
   font-size: var(--fs-md);
   line-height: 1.3;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+}
+
+.artist {
+  font-family: var(--font-chrome);
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+
+/* The one flag in the playlist, and the only red on the page. Height is held
+   whether or not the current track is flagged — an un-reserved badge would move
+   the clock and the dock every time one came round. */
+.banger {
+  height: 1.5rem;
+  margin-top: 0.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-chrome);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--siren);
+}
+/* An author `display` beats the UA sheet's `[hidden] { display: none }`
+   regardless of specificity — same trap as .out. */
+.banger[hidden] {
+  display: none;
+}
+
+/* Lifted from the StatusDot this is modelled on: 6px, a glow the width of the
+   dot again, and a slow pulse. `currentColor` for the glow, so the colour is set
+   in exactly one place. */
+.dot {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 10px currentColor;
+  animation: pulse-dot 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0.6;
+  }
 }
 
 .status {

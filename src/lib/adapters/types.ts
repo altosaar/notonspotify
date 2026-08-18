@@ -20,6 +20,9 @@ export interface ResolvedTrack {
   /** Straight from tracks.yaml: where to buy it or find the artist, shown as
    *  the one link under the play button. Never played, http(s) only. */
   link?: string;
+  /** `banger: true` in tracks.yaml. Only ever present and true — an unflagged
+   *  track carries no key at all, so there is no third state to render. */
+  banger?: true;
   year?: number;
   /** Seconds. Only ever set from tracks.yaml; YouTube and SoundCloud report
    *  their own, so in practice this is the Bandcamp estimate's input. */

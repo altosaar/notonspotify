@@ -86,8 +86,25 @@ const og = new URL("/og.png", Astro.site).href;
         {/* The clock face is built by clock.ts; this is the box it lands in. */}
         <div class="clock" id="clock"></div>
 
+        {
+          /* Title, then artist under it, then the badge — four lines that each
+             hold their own height whether or not they have anything in them, so
+             moving between tracks never shifts the clock above or the dock
+             below. All four are filled in by the player. */
+        }
         <div class="meta">
           <p class="track" id="meta"></p>
+          <p class="artist" id="artist"></p>
+          {
+            /* The dot is decoration; the words carry the meaning, so the dot is
+               aria-hidden and the line reads as plain text. `hidden` rather
+               than emptied, so a track that isn't flagged has no stray blank
+               line in the accessibility tree — the room stays reserved in CSS
+               either way. */
+          }
+          <p class="banger" id="banger" hidden>
+            <span class="dot" aria-hidden="true"></span>Certified banger
+          </p>
           <p class="status" id="status" role="status" aria-live="polite"></p>
         </div>
 

@@ -65,6 +65,11 @@ const TrackInput = z
       .url()
       .refine((u) => /^https?:$/.test(new URL(u).protocol), { message: "must be http or https" })
       .optional(),
+    // A flag, not a rating: the entries without it aren't worse, they just
+    // haven't been called out. `banger: false` is accepted and means the same
+    // as leaving it off — a strict schema shouldn't fail a build over someone
+    // spelling "no" out loud.
+    banger: z.boolean().optional(),
     year: z.number().int().min(1850).max(2100).optional(),
     duration: z.number().int().positive().optional(),
     start: z.number().int().nonnegative().optional(),
@@ -222,6 +227,7 @@ async function resolveOne(input: TrackInput): Promise<ResolvedTrack> {
     title: input.title,
     artist: input.artist,
     ...(input.link !== undefined && { link: input.link }),
+    ...(input.banger === true && { banger: true as const }),
     ...(input.year !== undefined && { year: input.year }),
     ...(duration !== undefined && { duration }),
     // Bandcamp's embed has no seek, so a start offset there would be a lie.

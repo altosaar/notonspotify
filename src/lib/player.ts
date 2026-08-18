@@ -36,6 +36,8 @@ const ui = {
   clock: $("clock"),
   dock: $("dock"),
   meta: $("meta"),
+  artist: $("artist"),
+  banger: $("banger"),
   status: $("status"),
   prev: $<HTMLButtonElement>("prev"),
   next: $<HTMLButtonElement>("next"),
@@ -89,8 +91,13 @@ const track = () => tracks[index]!;
 
 function paintMeta() {
   const t = track();
-  ui.meta.textContent = `${t.title} — ${t.artist}${t.year ? ` · ${t.year}` : ""}`;
+  // Two lines: the title owns one, the artist and year the next. A single
+  // "title — artist" run meant one long title truncated the artist's name away.
+  ui.meta.textContent = t.title;
+  ui.artist.textContent = `${t.artist}${t.year ? ` · ${t.year}` : ""}`;
+  ui.banger.hidden = !t.banger;
   const sounding = playing || estimateRunning;
+  // The tab has one line to work with, so it keeps the old single-run form.
   document.title = sounding ? `${t.title} — ${t.artist} · not on spotify` : "not on spotify";
 }
 

@@ -21,6 +21,10 @@ pointing wherever the artist would rather you went — their Bandcamp, their sit
 Unlike `url:` it isn't limited to the three platforms, because it is never
 played.
 
+`banger: true` is the other optional flag: a pulsing siren-red dot and the words
+_certified banger_ under the artist's name. It is a flag, not a rating — the
+tracks without it aren't worse, they just haven't been called out.
+
 ## How it works
 
 ```

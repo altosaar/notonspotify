@@ -9,6 +9,7 @@
 #   title: Title
 #   artist: Artist
 #   link: https://...    # optional — buy/artist page, shown under the play button
+#   banger: true         # optional — flags it, red dot and all
 #   year: 1989           # optional
 #   duration: 3390       # optional, seconds — makes the clock estimate on Bandcamp
 #   start: 0             # optional, seconds — start here (YouTube/SoundCloud only)
@@ -38,6 +39,7 @@
 - url: https://youtu.be/Cx_cWSppMIE?si=VvREwXZa9VbVsYKX
   title: Ultraviolet
   artist: Lorde of the Isles
+  banger: true
 
 - url: https://www.youtube.com/watch?v=7tKgttgz-hc
   title: Puhkus
