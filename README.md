@@ -174,6 +174,30 @@ So the components are untouched copies and the site still tells track time.
 Nobody here can look at forty clocks; CI can at least prove none of them throws
 or sits frozen.
 
+### Picking which ones are allowed
+
+Not all forty suit this page, and some barely move at the speed a track runs at.
+
+```bash
+npm run dev        # then open /faces/1
+```
+
+Ten clocks a page, all running. Two checkboxes each: **include**, and **10×** for
+one that is too still to read otherwise. **❚❚** freezes the page, **10×** at the
+top ticks all ten at once, and **faces.json** copies the result to the clipboard
+— paste it over [`faces.json`](./faces.json) at the root, which is what the build
+reads. Selections survive page changes (localStorage), so all four pages are one
+sitting.
+
+`faces.json` is the only thing that matters afterwards: `include: false` and a
+clock is never dealt to a track, `x10: true` and its seconds run ten times faster
+on the live site. A face missing from the file is included at 1×, so a newly
+mirrored clock shows up rather than vanishing. Turning them all off fails the
+build rather than shipping an empty clock.
+
+The picker is dev-server only — `getStaticPaths` returns nothing in a production
+build, so `/faces` is not in `dist/` and never deploys.
+
 ## Deploy
 
 A push to `main` deploys, via

@@ -16,11 +16,12 @@
  * a file, the same as it is for a hand-written face.
  */
 import type { Component } from "svelte";
-import type { Face } from "../kit.ts";
+import type { Face, FaceInput } from "../kit.ts";
 import { clockTime, type ClockTime } from "./time.ts";
 import { mountClock } from "./mount.svelte.ts";
 import manifest from "./manifest.json";
 import { mirrorName } from "./names.ts";
+import { speedOf } from "../eligible.ts";
 
 interface Entry {
   slug: string;
@@ -72,11 +73,17 @@ export const MIRRORED: Face[] = (manifest as Entry[]).flatMap((entry) => {
         Object.assign(box.style, shape(entry));
         host.append(box);
 
+        // Some of these barely move at the speed a track runs at, so faces.json
+        // can wind one forward ten times faster. Applied to the seconds only —
+        // the hour hand is the playlist's and has nothing to do with pace.
+        const speed = speedOf(mirrorName(entry.slug));
+        const at = (input: FaceInput) => clockTime({ ...input, elapsed: input.elapsed * speed });
+
         // Mounted already showing the track's time — at rest that is 00:00:00 —
         // rather than at some default it then corrects away from.
-        const mounted = mountClock(module.default, box, clockTime(initial));
+        const mounted = mountClock(module.default, box, at(initial));
         return {
-          update: (input) => mounted.set(clockTime(input)),
+          update: (input) => mounted.set(at(input)),
           destroy: () => mounted.destroy(),
         };
       },

@@ -1,0 +1,301 @@
+---
+/**
+ * The face picker. Dev server only — `npm run dev`, then /faces/1.
+ *
+ * Ten clocks a page, running, so the two decisions can be made by looking: does
+ * this belong here, and is it too still to read at track speed. The checkboxes
+ * are the answers, the buttons are for finding out.
+ *
+ * `getStaticPaths` returns nothing in a production build, so this never ships.
+ */
+import manifest from "../../lib/faces/clocksdev/manifest.json";
+import { PER_PAGE } from "../../lib/faces/clocksdev/paging.ts";
+
+export function getStaticPaths() {
+  if (import.meta.env.PROD) return [];
+  const pages = Math.ceil(manifest.length / PER_PAGE);
+  return Array.from({ length: pages }, (_, i) => ({ params: { page: String(i + 1) } }));
+}
+
+const entries = manifest as { slug: string; name: string; author: string }[];
+const pages = Math.ceil(entries.length / PER_PAGE);
+const index = Number(Astro.params.page) - 1;
+const names = entries.slice(index * PER_PAGE, (index + 1) * PER_PAGE).map((entry, i) => ({
+  name: `cd-${entry.slug}`,
+  title: entry.name,
+  author: entry.author,
+  // The hour hand is a track's place in the playlist; here it is the clock's
+  // place in the forty, so no two on a page sit at the same hour.
+  hours: ((index * PER_PAGE + i) / entries.length) * 12,
+}));
+
+// Built here rather than inline: a "/" inside an expression in <title> is enough
+// to make prettier's Astro plugin close the head early and rearrange the page.
+const title = `faces ${index + 1} of ${pages}`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --line: #2a2a2a;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: #0a0a0a;
+        color: #e2e2e2;
+        font:
+          12px/1.4 ui-sans-serif,
+          system-ui,
+          sans-serif;
+        padding: 3.25rem 1rem 2rem;
+      }
+      /* One row, always reachable: the point is flipping between pages while
+         the clocks keep running. */
+      .bar {
+        position: fixed;
+        inset: 0 0 auto;
+        z-index: 2;
+        display: flex;
+        gap: 0.4rem;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        background: #0a0a0aee;
+        border-bottom: 1px solid var(--line);
+        backdrop-filter: blur(6px);
+      }
+      button,
+      .bar a {
+        font: inherit;
+        color: inherit;
+        background: none;
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        padding: 0.3rem 0.6rem;
+        cursor: pointer;
+        text-decoration: none;
+      }
+      button:hover,
+      .bar a:hover {
+        border-color: #666;
+      }
+      button[aria-pressed="true"] {
+        background: #e2e2e2;
+        color: #0a0a0a;
+        border-color: #e2e2e2;
+      }
+      .bar a[aria-current="page"] {
+        border-color: #666;
+        background: #1c1c1c;
+      }
+      .spacer {
+        flex: 1;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+        gap: 1rem;
+      }
+      figure {
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      /* Roughly the shape the site gives them, so a judgement here holds there. */
+      .stage {
+        position: relative;
+        aspect-ratio: 16 / 10;
+        background: #000;
+        overflow: hidden;
+      }
+      .mirror {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+      }
+      .mirror-box {
+        position: relative;
+        overflow: hidden;
+      }
+      figcaption {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        padding: 0.4rem 0.55rem;
+        border-top: 1px solid var(--line);
+      }
+      label {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+      }
+      input {
+        accent-color: #24cb71;
+        width: 15px;
+        height: 15px;
+        cursor: pointer;
+      }
+      .who {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        opacity: 0.5;
+      }
+      /* An excluded clock stays visible but stops asking to be looked at. */
+      figure:has(.inc:not(:checked)) .stage {
+        opacity: 0.22;
+      }
+    </style>
+  </head>
+
+  <body>
+    <nav class="bar">
+      <button id="pause" type="button" aria-pressed="false" title="pause">❚❚</button>
+      <button id="x10" type="button" aria-pressed="false" title="10× everything here">10×</button>
+      <span class="spacer"></span>
+      {
+        Array.from({ length: pages }, (_, i) => (
+          <a href={`/faces/${i + 1}`} aria-current={i === index ? "page" : undefined}>
+            {i + 1}
+          </a>
+        ))
+      }
+      <span class="spacer"></span>
+      <button id="copy" type="button" title="copy the selection">faces.json</button>
+    </nav>
+
+    <div class="grid">
+      {
+        names.map((face) => (
+          <figure>
+            <div class="stage" data-host={face.name} />
+            <figcaption>
+              <label title="include">
+                <input class="inc" type="checkbox" data-name={face.name} />
+              </label>
+              <label title="10×">
+                <input class="ten" type="checkbox" data-name={face.name} />
+              </label>
+              <span class="who">
+                {face.title} · {face.author || "—"}
+              </span>
+            </figcaption>
+          </figure>
+        ))
+      }
+    </div>
+
+    <script id="page-faces" type="application/json" is:inline set:html={JSON.stringify(names)} />
+    <script>
+      import { MIRRORED } from "../../lib/faces/clocksdev/index.ts";
+      import defaults from "../../../faces.json";
+
+      interface Choice {
+        include: boolean;
+        x10: boolean;
+      }
+
+      const KEY = "notonspotify:faces";
+      const el = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+      const faces = JSON.parse(el("page-faces").textContent ?? "[]") as {
+        name: string;
+        hours: number;
+      }[];
+
+      // faces.json is the starting point, localStorage is the work in progress.
+      // A browser cannot write to the repo, so the copy button ends a session.
+      const choices: Record<string, Choice> = Object.fromEntries(
+        Object.entries(defaults as Record<string, Partial<Choice>>).map(([name, choice]) => [
+          name,
+          { include: choice.include !== false, x10: choice.x10 === true },
+        ]),
+      );
+      try {
+        Object.assign(choices, JSON.parse(localStorage.getItem(KEY) ?? "{}"));
+      } catch {
+        // Nothing saved yet, or storage is off. faces.json is a fine start.
+      }
+      const save = () => localStorage.setItem(KEY, JSON.stringify(choices));
+
+      // Each clock keeps its own elapsed time, so turning 10× on winds it forward
+      // from here rather than jumping it to where it would have been all along.
+      const running = faces.flatMap((face) => {
+        const mirror = MIRRORED.find((m) => m.name === face.name);
+        const stage = document.querySelector<HTMLElement>(`[data-host="${face.name}"]`);
+        if (!mirror || !stage) return [];
+        const box = document.createElement("div");
+        box.className = "mirror";
+        stage.append(box);
+        const handle = mirror.mount(box, { elapsed: 0, hours: face.hours });
+        return [{ name: face.name, hours: face.hours, handle, t: 0 }];
+      });
+
+      let paused = false;
+      let last = performance.now();
+      requestAnimationFrame(function frame(now) {
+        const dt = (now - last) / 1000;
+        last = now;
+        for (const face of running) {
+          if (!paused) face.t += dt * (choices[face.name]?.x10 ? 10 : 1);
+          face.handle.update({ elapsed: face.t, hours: face.hours });
+        }
+        requestAnimationFrame(frame);
+      });
+
+      // The checkboxes show the saved answers, then write them back.
+      for (const input of document.querySelectorAll<HTMLInputElement>("input[data-name]")) {
+        const name = input.dataset.name!;
+        const key = input.classList.contains("inc") ? "include" : "x10";
+        choices[name] ??= { include: true, x10: false };
+        input.checked = choices[name][key];
+        input.addEventListener("change", () => {
+          choices[name] = { ...choices[name]!, [key]: input.checked };
+          save();
+        });
+      }
+
+      const pause = el<HTMLButtonElement>("pause");
+      pause.addEventListener("click", () => {
+        paused = !paused;
+        pause.setAttribute("aria-pressed", String(paused));
+      });
+
+      // The page 10× ticks all ten boxes rather than holding a state of its own,
+      // so there is nothing that can disagree with what gets copied out.
+      const ten = el<HTMLButtonElement>("x10");
+      ten.addEventListener("click", () => {
+        const on = ten.getAttribute("aria-pressed") !== "true";
+        ten.setAttribute("aria-pressed", String(on));
+        for (const input of document.querySelectorAll<HTMLInputElement>("input.ten")) {
+          input.checked = on;
+          input.dispatchEvent(new Event("change"));
+        }
+      });
+
+      const copy = el<HTMLButtonElement>("copy");
+      copy.addEventListener("click", async () => {
+        // Keyed in faces.json's own order, so pasting it over the file is a
+        // readable diff rather than a reshuffle.
+        const ordered = Object.fromEntries(
+          Object.keys(defaults as Record<string, unknown>).map((name) => [name, choices[name]!]),
+        );
+        await navigator.clipboard.writeText(`${JSON.stringify(ordered, null, 2)}\n`);
+        copy.textContent = "copied";
+        setTimeout(() => (copy.textContent = "faces.json"), 1200);
+      });
+    </script>
+  </body>
+</html>

@@ -83,9 +83,14 @@ const TrackInput = z
 
 type TrackInput = z.infer<typeof TrackInput>;
 
-function fail(message: string): never {
-  console.error(`\ntracks.yaml: ${message}\n`);
+function failIn(file: string, message: string): never {
+  console.error(`\n${file}: ${message}\n`);
   process.exit(1);
+}
+
+/** Most build failures are the playlist's, so that is the default. */
+function fail(message: string): never {
+  return failIn("tracks.yaml", message);
 }
 
 function validate(raw: unknown): TrackInput[] {
@@ -273,6 +278,10 @@ function shuffled<T>(input: T[]): T[] {
 
 function dealFaces(count: number): string[] {
   const library = [...FACE_NAMES];
+  // Turning every face off in faces.json is a plausible slip with a very
+  // confusing symptom — a site whose clock box is empty — so it is a build
+  // failure with the file named, like a bad tracks.yaml entry.
+  if (library.length === 0) failIn("faces.json", "every face is turned off — nothing to deal");
   const out: string[] = [];
   while (out.length < count) {
     const round = shuffled(library);

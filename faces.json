@@ -1,0 +1,162 @@
+{
+  "cd-minimalist-time-scale-inspired-by-blinry": {
+    "include": true,
+    "x10": false
+  },
+  "cd-chromatic": {
+    "include": true,
+    "x10": false
+  },
+  "cd-vingt-8-iso": {
+    "include": true,
+    "x10": false
+  },
+  "cd-tulv": {
+    "include": true,
+    "x10": false
+  },
+  "cd-shadow": {
+    "include": true,
+    "x10": false
+  },
+  "cd-24h": {
+    "include": true,
+    "x10": false
+  },
+  "cd-tria": {
+    "include": true,
+    "x10": false
+  },
+  "cd-inkform": {
+    "include": true,
+    "x10": false
+  },
+  "cd-24-hour-clock": {
+    "include": true,
+    "x10": false
+  },
+  "cd-ai-world-clock": {
+    "include": true,
+    "x10": false
+  },
+  "cd-pendulum": {
+    "include": true,
+    "x10": false
+  },
+  "cd-ufo-radar-ii": {
+    "include": true,
+    "x10": false
+  },
+  "cd-zodiac-seal-almanac": {
+    "include": true,
+    "x10": false
+  },
+  "cd-metronome": {
+    "include": true,
+    "x10": false
+  },
+  "cd-redline": {
+    "include": true,
+    "x10": false
+  },
+  "cd-isochron": {
+    "include": true,
+    "x10": false
+  },
+  "cd-tumbler": {
+    "include": true,
+    "x10": false
+  },
+  "cd-twelve-shichen": {
+    "include": true,
+    "x10": false
+  },
+  "cd-compass-clock": {
+    "include": true,
+    "x10": false
+  },
+  "cd-faster-faster-woah-too-fast": {
+    "include": true,
+    "x10": false
+  },
+  "cd-binclock": {
+    "include": true,
+    "x10": false
+  },
+  "cd-astral": {
+    "include": true,
+    "x10": false
+  },
+  "cd-osculated": {
+    "include": true,
+    "x10": false
+  },
+  "cd-bar-chart": {
+    "include": true,
+    "x10": false
+  },
+  "cd-binary-clock": {
+    "include": true,
+    "x10": false
+  },
+  "cd-beat-internet-time": {
+    "include": true,
+    "x10": false
+  },
+  "cd-photo-phinish": {
+    "include": true,
+    "x10": false
+  },
+  "cd-eclipse": {
+    "include": true,
+    "x10": false
+  },
+  "cd-cells": {
+    "include": true,
+    "x10": false
+  },
+  "cd-precession": {
+    "include": true,
+    "x10": false
+  },
+  "cd-hex-a-clock": {
+    "include": true,
+    "x10": false
+  },
+  "cd-ufo-radar-ii-2": {
+    "include": true,
+    "x10": false
+  },
+  "cd-sony-icf-c1": {
+    "include": true,
+    "x10": false
+  },
+  "cd-hand-tips-zoom": {
+    "include": true,
+    "x10": false
+  },
+  "cd-death-star-countdown": {
+    "include": true,
+    "x10": false
+  },
+  "cd-gemma": {
+    "include": true,
+    "x10": false
+  },
+  "cd-ai-lcd": {
+    "include": true,
+    "x10": false
+  },
+  "cd-matrix-display": {
+    "include": true,
+    "x10": false
+  },
+  "cd-minimal-s": {
+    "include": true,
+    "x10": false
+  },
+  "cd-real-binary-clock": {
+    "include": true,
+    "x10": false
+  }
+}
