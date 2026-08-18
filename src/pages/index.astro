@@ -60,19 +60,6 @@ const og = new URL("/og.png", Astro.site).href;
   <body>
     <div class="app">
       <header class="bar">
-        {
-          /* Off → repeat the list → repeat this one → off. Remembered between
-             visits. The whole header, and the only chrome on the page. */
-        }
-        <button class="repeat" id="repeat" type="button" aria-label="repeat: off">
-          <svg class="repeat-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 10V9a4 4 0 0 1 4-4h9"></path>
-            <path d="m14 2 3 3-3 3"></path>
-            <path d="M20 14v1a4 4 0 0 1-4 4H7"></path>
-            <path d="m10 16-3 3 3 3"></path>
-            <text class="one" x="12" y="15.5">1</text>
-          </svg>
-        </button>
         <button class="ask" id="ask" type="button" aria-label="about">?</button>
       </header>
 
@@ -159,26 +146,56 @@ const og = new URL("/og.png", Astro.site).href;
           <p class="status" id="status" role="status" aria-live="polite"></p>
         </div>
 
+        {
+          /* Shuffle, back, play, forward, repeat. All drawn, all square-cornered
+             — no rounded joins, no rounded buttons; the play disc is the one
+             curve on the row and it is a disc, not a corner. */
+        }
         <div class="controls">
+          <button class="chip" id="shuffle" type="button" aria-label="shuffle: off">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 6h4l10 12h4"></path>
+              <path d="M3 18h4l10-12h4"></path>
+              <path d="m18 3 3 3-3 3"></path>
+              <path d="m18 15 3 3-3 3"></path>
+            </svg>
+          </button>
+
+          <button class="chip" id="prev" type="button" aria-label="previous">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path class="solid" d="M20 5 9 12l11 7z"></path>
+              <path class="solid" d="M5 5h2.5v14H5z"></path>
+            </svg>
+          </button>
+
           {
-            /* Drawn, not typed: neither webface carries ◄ ►, so the two arrows
-               came from whatever the OS substituted and never matched each
-               other. */
+            /* A filled disc with the mark knocked out of it, so the triangle is
+               the page's black rather than a second colour to keep in step. */
           }
-          <button class="step" id="prev" type="button" aria-label="previous">
-            <svg class="arrow" viewBox="0 0 12 14" aria-hidden="true"
-              ><path d="M11 0 1 7l10 7z"></path></svg
-            >
-          </button>
           <button class="play" id="toggle" type="button" aria-label="play">
-            <span class="glyph" id="glyph" aria-hidden="true">▶</span>
-            <span class="label" id="label" aria-hidden="true">play</span>
+            <svg viewBox="0 0 44 44" aria-hidden="true">
+              <circle class="disc" cx="22" cy="22" r="21"></circle>
+              <path class="mark" id="glyph" d="M17 13 32 22 17 31z"></path>
+            </svg>
           </button>
-          <button class="step" id="next" type="button" aria-label="next">
-            <svg class="arrow flip" viewBox="0 0 12 14" aria-hidden="true"
-              ><path d="M11 0 1 7l10 7z"></path></svg
-            >
+
+          <button class="chip" id="next" type="button" aria-label="next">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path class="solid" d="M4 5l11 7-11 7z"></path>
+              <path class="solid" d="M16.5 5H19v14h-2.5z"></path>
+            </svg>
           </button>
+
+          <button class="chip" id="repeat" type="button" aria-label="repeat: off">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 11V5h13"></path>
+              <path d="m14 2 3 3-3 3"></path>
+              <path d="M20 13v6H7"></path>
+              <path d="m10 16-3 3 3 3"></path>
+              <text class="one" x="12" y="15.5">1</text>
+            </svg>
+          </button>
+
           {
             /* The way out: for a track with a `link:` in tracks.yaml, the place
                to actually buy the record. Empty and hidden until the player

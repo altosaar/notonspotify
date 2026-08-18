@@ -320,8 +320,18 @@ const settled = await Promise.all(
 const playlist = settled.filter((track): track is ResolvedTrack => track !== null);
 if (playlist.length === 0) fail("every entry failed to resolve — refusing to ship an empty player");
 
-// Dealt after the drops, not before: a track that failed to resolve shouldn't
-// take a face out of the deck with it.
+// Bandcamp goes last, whatever order tracks.yaml is in.
+//
+// Its embed cannot be started from the page and cannot be handed on from, so a
+// Bandcamp entry is where a listening session stops — autoplay reaches it and
+// waits for a click that may never come. At the end of the list that is a
+// natural finish; in the middle it is a wall. A stable partition, so the
+// author's order still decides everything else.
+playlist.sort((a, b) => Number(a.platform === "bandcamp") - Number(b.platform === "bandcamp"));
+
+// Dealt after the drops AND after the sort, not before: a track that failed to
+// resolve shouldn't take a face out of the deck with it, and the deal follows
+// the order it will actually be played in.
 const faces = dealFaces(playlist.length);
 playlist.forEach((track, i) => {
   track.face = faces[i]!;

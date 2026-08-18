@@ -1,5 +1,8 @@
 # The playlist. Add a track: copy a block, edit it, commit. That's it.
 # Order here is playing order — the top of the file plays first going forward.
+# One exception: Bandcamp entries are moved to the end by the build, wherever
+# they sit here. Their embed can't be started from the page or handed on from,
+# so a session stops at one; last is a finish, in the middle it's a wall.
 #
 # url is the only thing that must be exactly right. title/artist can be fixed
 # later. YouTube, SoundCloud (share links are fine — the build expands them) and
@@ -91,26 +94,24 @@
   title: TODO
   artist: TODO
 
-
-- url: https://thenecksau.bandcamp.com/album/sex
+- url: https://www.youtube.com/watch?v=w8glrLkMpBs
+  link: https://thenecksau.bandcamp.com/album/sex
   title: Sex
   artist: The Necks
-  year: 1989
-  duration: 3390
-  note: one continuous piece
+
+- url: https://www.youtube.com/watch?v=xiKXJSHogKU
+  title: A Thousand Miles
+  artist: Teddy Swims
+
+- url: https://soundcloud.com/garcon2k/for-god-so-loved-the-world
+  title: For God So Loved the World
+  artist: garçon d’or
+
+- url: https://youtu.be/bsxDs3lbEt0?si=AjrJp4srcNfFLI-S
+  link: https://astromegamusic.bandcamp.com/album/godbodydevine-vol-1-2
+  title: GODBODYDEVINE Vol. 1 & 2
+  artist: Astro Mega
 
 - url: https://losttraveler.bandcamp.com/track/nocturnal-essences-alternative-edition
   title: Nocturnal Essences (Alternative Edition)
   artist: Lost Traveler
-
-- url: https://astromegamusic.bandcamp.com/album/godbodydevine-vol-1-2
-  title: GODBODYDEVINE Vol. 1 & 2
-  artist: Astro Mega
-
-- url: https://garcondior.bandcamp.com/album/omp-1
-  title: OMP-1
-  artist: Garçon D'ior
-
-- url: https://youmustrememberthis.bandcamp.com/album/you-must-remember-this-2
-  title: You Must Remember This 2
-  artist: You Must Remember This

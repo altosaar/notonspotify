@@ -1,162 +1,242 @@
 {
   "cd-minimalist-time-scale-inspired-by-blinry": {
-    "include": true,
-    "x10": false
+    "include": false,
+    "x10": false,
+    "notext": false,
+    "nonumbers": false
   },
   "cd-chromatic": {
     "include": true,
-    "x10": false
+    "x10": false,
+    "notext": false,
+    "nonumbers": false
   },
   "cd-vingt-8-iso": {
-    "include": true,
-    "x10": false
+    "include": false,
+    "x10": false,
+    "notext": false,
+    "nonumbers": false
   },
   "cd-tulv": {
-    "include": true,
-    "x10": false
+    "include": false,
+    "x10": false,
+    "notext": false,
+    "nonumbers": false
   },
   "cd-shadow": {
     "include": true,
-    "x10": false
+    "x10": false,
+    "notext": false,
+    "nonumbers": false
   },
   "cd-24h": {
-    "include": true,
-    "x10": false
+    "include": false,
+    "x10": false,
+    "notext": true,
+    "nonumbers": false
   },
   "cd-tria": {
     "include": true,
-    "x10": false
+    "x10": true,
+    "notext": false,
+    "nonumbers": true
   },
   "cd-inkform": {
-    "include": true,
-    "x10": false
+    "include": false,
+    "x10": false,
+    "notext": false,
+    "nonumbers": false
   },
   "cd-24-hour-clock": {
-    "include": true,
-    "x10": false
+    "include": false,
+    "x10": false,
+    "notext": false,
+    "nonumbers": false
   },
   "cd-ai-world-clock": {
-    "include": true,
-    "x10": false
+    "include": false,
+    "x10": false,
+    "notext": false,
+    "nonumbers": false
   },
   "cd-pendulum": {
     "include": true,
-    "x10": false
+    "x10": false,
+    "notext": false,
+    "nonumbers": true
   },
   "cd-ufo-radar-ii": {
     "include": true,
-    "x10": false
+    "x10": true,
+    "notext": true,
+    "nonumbers": true
   },
   "cd-zodiac-seal-almanac": {
-    "include": true,
-    "x10": false
+    "include": false,
+    "x10": false,
+    "notext": false,
+    "nonumbers": false
   },
   "cd-metronome": {
     "include": true,
-    "x10": false
+    "x10": false,
+    "notext": false,
+    "nonumbers": true
   },
   "cd-redline": {
-    "include": true,
-    "x10": false
+    "include": false,
+    "x10": false,
+    "notext": false,
+    "nonumbers": false
   },
   "cd-isochron": {
     "include": true,
-    "x10": false
+    "x10": true,
+    "notext": false,
+    "nonumbers": false
   },
   "cd-tumbler": {
-    "include": true,
-    "x10": false
+    "include": false,
+    "x10": true,
+    "notext": false,
+    "nonumbers": false
   },
   "cd-twelve-shichen": {
-    "include": true,
-    "x10": false
+    "include": false,
+    "x10": false,
+    "notext": false,
+    "nonumbers": false
   },
   "cd-compass-clock": {
-    "include": true,
-    "x10": false
+    "include": false,
+    "x10": false,
+    "notext": false,
+    "nonumbers": false
   },
   "cd-faster-faster-woah-too-fast": {
     "include": true,
-    "x10": false
+    "x10": false,
+    "notext": false,
+    "nonumbers": false
   },
   "cd-binclock": {
-    "include": true,
-    "x10": false
+    "include": false,
+    "x10": true,
+    "notext": false,
+    "nonumbers": false
   },
   "cd-astral": {
-    "include": true,
-    "x10": false
+    "include": false,
+    "x10": true,
+    "notext": false,
+    "nonumbers": false
   },
   "cd-osculated": {
     "include": true,
-    "x10": false
+    "x10": false,
+    "notext": false,
+    "nonumbers": false
   },
   "cd-bar-chart": {
     "include": true,
-    "x10": false
+    "x10": false,
+    "notext": true,
+    "nonumbers": true
   },
   "cd-binary-clock": {
-    "include": true,
-    "x10": false
+    "include": false,
+    "x10": true,
+    "notext": false,
+    "nonumbers": false
   },
   "cd-beat-internet-time": {
-    "include": true,
-    "x10": false
+    "include": false,
+    "x10": true,
+    "notext": false,
+    "nonumbers": false
   },
   "cd-photo-phinish": {
     "include": true,
-    "x10": false
+    "x10": true,
+    "notext": false,
+    "nonumbers": true
   },
   "cd-eclipse": {
     "include": true,
-    "x10": false
+    "x10": true,
+    "notext": false,
+    "nonumbers": true
   },
   "cd-cells": {
     "include": true,
-    "x10": false
+    "x10": false,
+    "notext": false,
+    "nonumbers": false
   },
   "cd-precession": {
     "include": true,
-    "x10": false
+    "x10": true,
+    "notext": false,
+    "nonumbers": false
   },
   "cd-hex-a-clock": {
-    "include": true,
-    "x10": false
+    "include": false,
+    "x10": false,
+    "notext": false,
+    "nonumbers": false
   },
   "cd-ufo-radar-ii-2": {
     "include": true,
-    "x10": false
+    "x10": false,
+    "notext": false,
+    "nonumbers": true
   },
   "cd-sony-icf-c1": {
-    "include": true,
-    "x10": false
+    "include": false,
+    "x10": false,
+    "notext": false,
+    "nonumbers": false
   },
   "cd-hand-tips-zoom": {
     "include": true,
-    "x10": false
+    "x10": false,
+    "notext": false,
+    "nonumbers": false
   },
   "cd-death-star-countdown": {
-    "include": true,
-    "x10": false
+    "include": false,
+    "x10": false,
+    "notext": false,
+    "nonumbers": false
   },
   "cd-gemma": {
-    "include": true,
-    "x10": false
+    "include": false,
+    "x10": false,
+    "notext": false,
+    "nonumbers": false
   },
   "cd-ai-lcd": {
-    "include": true,
-    "x10": false
+    "include": false,
+    "x10": false,
+    "notext": false,
+    "nonumbers": false
   },
   "cd-matrix-display": {
-    "include": true,
-    "x10": false
+    "include": false,
+    "x10": false,
+    "notext": false,
+    "nonumbers": false
   },
   "cd-minimal-s": {
-    "include": true,
-    "x10": false
+    "include": false,
+    "x10": false,
+    "notext": false,
+    "nonumbers": false
   },
   "cd-real-binary-clock": {
-    "include": true,
-    "x10": false
+    "include": false,
+    "x10": false,
+    "notext": false,
+    "nonumbers": false
   }
 }

@@ -28,7 +28,10 @@ const RANDOM_START = true;
 const ERROR_PAUSE_MS = 1500;
 const MAX_CONSECUTIVE_ERRORS = 3;
 
-const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+// Defaults to HTMLElement, widens to Element on request: the play button's mark
+// is an SVG <path>, and everything else on the page is ordinary HTML.
+const $ = <T extends Element = HTMLElement>(id: string) =>
+  document.getElementById(id) as unknown as T;
 
 const tracks: ResolvedTrack[] = JSON.parse($("playlist").textContent ?? "[]");
 
@@ -43,17 +46,73 @@ const ui = {
   next: $<HTMLButtonElement>("next"),
   toggle: $<HTMLButtonElement>("toggle"),
   repeat: $<HTMLButtonElement>("repeat"),
+  shuffle: $<HTMLButtonElement>("shuffle"),
   ask: $<HTMLButtonElement>("ask"),
   about: $<HTMLDialogElement>("about"),
   aboutClose: $<HTMLButtonElement>("about-close"),
-  glyph: $("glyph"),
-  label: $("label"),
+  glyph: $<SVGPathElement>("glyph"),
   out: $<HTMLAnchorElement>("out"),
 };
 
 const ADAPTERS: Record<Platform, () => PlayerAdapter> = { youtube, soundcloud, bandcamp };
 
-let index = RANDOM_START ? Math.floor(Math.random() * tracks.length) : 0;
+/** Fisher-Yates, on a copy. */
+function shuffled<T>(input: T[]): T[] {
+  const out = [...input];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j]!, out[i]!];
+  }
+  return out;
+}
+
+const IDS = tracks.map((_, i) => i);
+const PLAYABLE = IDS.filter((i) => tracks[i]!.platform !== "bandcamp");
+const TERMINAL = IDS.filter((i) => tracks[i]!.platform === "bandcamp");
+
+/**
+ * Where the unshuffled order starts: a ROTATION of the playable tracks, not a
+ * cursor dropped somewhere into the list.
+ *
+ * That is the difference between "start anywhere" and "start anywhere and still
+ * finish where the list finishes". Land two from the end with a cursor offset
+ * and Bandcamp arrives after two taps, with the rest of the list after it. A
+ * rotation walks all of them and arrives there last, wherever it began.
+ */
+const START = RANDOM_START && PLAYABLE.length ? Math.floor(Math.random() * PLAYABLE.length) : 0;
+
+/**
+ * The playing order, as positions into `tracks`.
+ *
+ * Bandcamp last in both orders, shuffled or not — its embed cannot be started
+ * from this page or handed on from, so a session stops at one. The build already
+ * sorts them to the end; this keeps them there once the order is a visitor's
+ * choice rather than the file's.
+ */
+function playOrder(random: boolean, first?: number): number[] {
+  const arranged = random
+    ? shuffled(PLAYABLE)
+    : [...PLAYABLE.slice(START), ...PLAYABLE.slice(0, START)];
+  // Rotated onto the track already playing, so turning shuffle on mid-list keeps
+  // that track playing AND leaves everything else — Bandcamp included — ahead of
+  // it, rather than half the list behind. Same reason START is a rotation.
+  const k = first === undefined ? 0 : arranged.indexOf(first);
+  const head = k > 0 ? [...arranged.slice(k), ...arranged.slice(0, k)] : arranged;
+  return [...head, ...(random ? shuffled(TERMINAL) : TERMINAL)];
+}
+
+const SHUFFLE_KEY = "notonspotify:shuffle";
+let shuffle = false;
+try {
+  shuffle = localStorage.getItem(SHUFFLE_KEY) === "on";
+} catch {
+  // Private mode, or storage turned off. Starts off, same as a first visit.
+}
+
+let order = playOrder(shuffle);
+/** Where in `order` we are — not which track, which turn. Always the top of it:
+ *  the randomness is in how the order was arranged, not where we join it. */
+let cursor = 0;
 let adapter: PlayerAdapter | null = null;
 let armed = false;
 let intent = false;
@@ -81,7 +140,7 @@ try {
   // Private mode, or storage turned off. Starts at off, same as a first visit.
 }
 
-const track = () => tracks[index]!;
+const track = () => tracks[order[cursor]!]!;
 
 // Below `track` on purpose: the clock has to be handed the face this track was
 // dealt at build time, and that isn't knowable until `index` and `track` exist.
@@ -90,7 +149,7 @@ const track = () => tracks[index]!;
  * through the PLAYLIST you are and holds still for the length of a track. The
  * minutes and seconds under it are the track's own, from zero.
  */
-const playlistHours = () => (index / tracks.length) * 12;
+const playlistHours = () => (cursor / order.length) * 12;
 
 const clock = createClock(
   ui.clock,
@@ -147,6 +206,14 @@ function drivable(): boolean {
   return adapter ? adapter.caps.control : track().platform !== "bandcamp";
 }
 
+/** The three shapes the disc can carry, drawn rather than typed. */
+const MARK = {
+  play: "M17 13 32 22 17 31z",
+  pause: "M16 13h4v18h-4zM24 13h4v18h-4z",
+  /** Down at the embed, for the one platform this page cannot start. */
+  below: "M22 11v14M15 20l7 7 7-7",
+};
+
 function paintButton() {
   // Bandcamp can't be driven from here, so the button stops pretending to be a
   // play button and becomes a sign — an inert one. Disabled rather than merely
@@ -155,11 +222,21 @@ function paintButton() {
   // activating it) can pretend to start a track this page cannot start.
   const below = !drivable();
   const label = below ? "click below to play" : playing ? "pause" : "play";
-  ui.glyph.textContent = below ? "↓" : playing ? "⏸" : "▶";
-  ui.label.textContent = label;
+  ui.glyph.setAttribute("d", below ? MARK.below : playing ? MARK.pause : MARK.play);
+  // The arrow is a stroke; the triangle and the bars are solid.
+  ui.glyph.style.stroke = below ? "currentColor" : "";
+  ui.glyph.style.strokeWidth = below ? "2" : "";
+  ui.glyph.style.fill = below ? "none" : "";
   ui.toggle.setAttribute("aria-label", label);
-  ui.toggle.classList.toggle("is-below", below);
   ui.toggle.disabled = below;
+  // The words used to sit inside the disc; there is no room for them there now,
+  // and the status line is where the page already says things.
+  if (below) status("click below to play");
+}
+
+function paintShuffle() {
+  ui.shuffle.classList.toggle("is-on", shuffle);
+  ui.shuffle.setAttribute("aria-label", shuffle ? "shuffle: on" : "shuffle: off");
 }
 
 function paintRepeat() {
@@ -260,7 +337,7 @@ function onError() {
 /** Wraps at both ends. `keepStatus` is the error-skip carrying its own message. */
 function go(delta: number, autoplay: boolean, keepStatus = false) {
   teardown();
-  index = (index + delta + tracks.length) % tracks.length;
+  cursor = (cursor + delta + order.length) % order.length;
   // New track, new face: which hand carries which layer of time, and where each
   // one starts, is drawn fresh here and holds for as long as this track does.
   clock.shuffle(track().face, playlistHours());
@@ -379,6 +456,21 @@ function click(button: HTMLButtonElement, run: () => void) {
 click(ui.toggle, toggle);
 click(ui.prev, () => go(-1, intent));
 click(ui.next, () => go(1, intent));
+click(ui.shuffle, () => {
+  shuffle = !shuffle;
+  try {
+    localStorage.setItem(SHUFFLE_KEY, shuffle ? "on" : "off");
+  } catch {
+    // Private mode, or storage turned off. The control still works.
+  }
+  // The track playing does not change under the visitor: the order is rebuilt
+  // around it and the cursor follows it to wherever it landed.
+  const current = order[cursor]!;
+  order = playOrder(shuffle, current);
+  cursor = order.indexOf(current);
+  paintShuffle();
+});
+
 click(ui.repeat, () => {
   repeat = REPEAT_CYCLE[(REPEAT_CYCLE.indexOf(repeat) + 1) % REPEAT_CYCLE.length]!;
   try {
@@ -421,6 +513,7 @@ document.addEventListener("keydown", (e) => {
 paintMeta();
 paintButton();
 paintRepeat();
+paintShuffle();
 paintLink();
 // The opening track gets what any other would: if it's a Bandcamp one, its
 // player is on screen from the start rather than one tap away.

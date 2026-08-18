@@ -116,52 +116,6 @@ body {
   padding-block: 0.25rem;
 }
 
-.repeat {
-  width: 44px; /* a real tap target around a 16px mark */
-  height: 44px;
-  display: grid;
-  place-items: center;
-  color: var(--text-muted);
-}
-/* The dim lives on the icon, not the button, so the button's own hover and
-   active opacity still read in every state. */
-.repeat .repeat-icon {
-  opacity: 0.4;
-}
-.repeat.is-on {
-  color: var(--text);
-}
-.repeat.is-on .repeat-icon {
-  opacity: 1;
-}
-
-.repeat-icon {
-  width: 20px;
-  height: 20px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-/* The digit sits over the loop, so it's drawn with a knock-out in the page's
-   own black first — otherwise the strokes behind it turn a "1" into a smudge at
-   20px. */
-.repeat-icon .one {
-  display: none;
-  font-family: var(--font-chrome);
-  font-size: 10px;
-  font-weight: 600;
-  text-anchor: middle;
-  fill: currentColor;
-  stroke: var(--bg);
-  stroke-width: 3px;
-  paint-order: stroke fill;
-}
-.repeat.is-one .one {
-  display: block;
-}
-
 .ask {
   width: 44px;
   height: 44px;
@@ -470,49 +424,14 @@ main {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: clamp(0.75rem, 6vw, 2rem);
+  gap: clamp(0.65rem, 4.5vw, 1.6rem);
   /* The only thing below the play button is the link out, and its room is
      reserved here rather than taken by the link itself — always the same
      height, whether or not the track has a `link:`. Otherwise the dock band and
      everything above it would shift by 44px between one track and the next.
-     Because the padding is on the flex box, all three buttons recentre inside
-     what's left together: prev and next stay level with the play button. */
+     Because the padding is on the flex box, every button recentres inside what
+     is left together, so they stay level with each other. */
   padding-bottom: var(--out-h);
-}
-
-/* Centred under the play button, out of flow, sitting on the floor of the room
-   the padding above reserved. */
-.out {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  translate: -50% 0;
-  width: 44px; /* a real tap target around a 20px mark, as with .repeat */
-  height: var(--out-h);
-  display: grid;
-  place-items: center;
-  color: var(--text-muted);
-  text-decoration: none;
-  -webkit-tap-highlight-color: transparent;
-  transition: color var(--dur) ease;
-}
-/* An author `display` beats the UA sheet's `[hidden] { display: none }` no
-   matter how the specificity falls, so `hidden` has to be honoured by hand or
-   the grid above would keep the link on screen for tracks that have none. */
-.out[hidden] {
-  display: none;
-}
-.out:hover {
-  color: var(--text);
-}
-.out-icon {
-  width: 20px;
-  height: 20px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
 }
 
 button {
@@ -531,63 +450,90 @@ button:active {
   opacity: 0.35;
 }
 
-.step {
-  width: 64px;
-  height: 64px;
+/* The four small ones. Square everywhere: butt caps, mitred joins, no radius on
+   the button — the drawn shapes have corners and they stay corners. */
+.chip {
+  width: 44px; /* a real tap target around a 24px mark */
+  height: 44px;
   display: grid;
   place-items: center;
   color: var(--text-muted);
+  border-radius: 0;
 }
-
-.arrow {
-  width: auto;
-  height: 15px;
+.chip svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: butt;
+  stroke-linejoin: miter;
+}
+/* Back and forward are solid marks, not outlines. */
+.chip svg .solid {
   fill: currentColor;
-}
-.arrow.flip {
-  transform: scaleX(-1);
+  stroke: none;
 }
 
+/* On means lit; off means the same grey as everything else on the row. */
+.chip.is-on {
+  color: var(--text);
+}
+
+/* The digit sits over the loop, so it's drawn with a knock-out in the page's
+   own black first — otherwise the strokes behind it turn a "1" into a smudge at
+   24px. */
+.chip .one {
+  display: none;
+  font-family: var(--font-chrome);
+  font-size: 10px;
+  font-weight: 600;
+  text-anchor: middle;
+  fill: currentColor;
+  stroke: var(--bg);
+  stroke-width: 3px;
+  paint-order: stroke fill;
+}
+.chip.is-one .one {
+  display: block;
+}
+
+/* A filled disc with the mark cut out of it in the page's own black, so there
+   is one colour on the row and no second one to keep in step. */
 .play {
-  width: 112px;
-  height: 112px;
+  width: 60px;
+  height: 60px;
   display: grid;
   place-items: center;
-  align-content: center;
-  gap: 0.3rem;
-  border: 1px solid var(--text);
-  border-radius: 50%;
+  border-radius: 0;
 }
-.play .glyph {
-  font-size: 1.6rem;
-  line-height: 1;
-  /* ▶ sits optically left of centre inside a circle. */
-  transform: translateX(0.06em);
+.play svg {
+  width: 100%;
+  height: 100%;
 }
-.play.is-below .glyph {
-  transform: none;
+.play .disc {
+  fill: var(--text);
+  stroke: none;
 }
-.play .label {
-  font-family: var(--font-chrome);
-  font-size: 0.6875rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  white-space: nowrap;
-}
-/* "click below to play" is too long for one line inside the circle, so this
-   state gets two. */
-.play.is-below .label {
-  white-space: normal;
-  max-width: 96px;
-  line-height: 1.25;
-  text-align: center;
+.play .mark {
+  fill: var(--bg);
+  stroke: none;
 }
 /* Inert, and looking it: no pointer, and none of the button hover or active
-   feedback that would suggest something is going to happen. */
+   feedback that would suggest something is going to happen. Bandcamp's embed is
+   its own play button, so this becomes a sign pointing at it — the words go in
+   the status line, where there is room for them. */
 .play:disabled {
   cursor: default;
   opacity: 1;
+}
+.play:disabled .disc {
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 1;
+}
+.play:disabled .mark {
+  fill: var(--text-muted);
 }
 
 /* ── Media dock ─────────────────────────────────────────────────────────── */
