@@ -38,6 +38,10 @@
      YouTube is the tallest of the three; the rest centre inside it. */
   --dock-h: clamp(200px, calc(min(100vw - 2 * var(--edge), var(--col)) * 0.5625), 220px);
 
+  /* The strip under the play button that holds the link out to the artist. Kept
+     clear whether or not the current track has one (see .controls). */
+  --out-h: 44px;
+
   --dur: 225ms;
 }
 
@@ -350,12 +354,53 @@ main {
 /* ── Controls ───────────────────────────────────────────────────────────── */
 
 .controls {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: clamp(0.75rem, 6vw, 2rem);
-  /* No padding below: the dock band begins exactly at the bottom of the play
-     button, which is what the embeds are centred against. */
+  /* The only thing below the play button is the link out, and its room is
+     reserved here rather than taken by the link itself — always the same
+     height, whether or not the track has a `link:`. Otherwise the dock band and
+     everything above it would shift by 44px between one track and the next.
+     Because the padding is on the flex box, all three buttons recentre inside
+     what's left together: prev and next stay level with the play button. */
+  padding-bottom: var(--out-h);
+}
+
+/* Centred under the play button, out of flow, sitting on the floor of the room
+   the padding above reserved. */
+.out {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  translate: -50% 0;
+  width: 44px; /* a real tap target around a 20px mark, as with .repeat */
+  height: var(--out-h);
+  display: grid;
+  place-items: center;
+  color: var(--text-muted);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: color var(--dur) ease;
+}
+/* An author `display` beats the UA sheet's `[hidden] { display: none }` no
+   matter how the specificity falls, so `hidden` has to be honoured by hand or
+   the grid above would keep the link on screen for tracks that have none. */
+.out[hidden] {
+  display: none;
+}
+.out:hover {
+  color: var(--text);
+}
+.out-icon {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 button {

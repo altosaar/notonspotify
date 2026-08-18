@@ -46,6 +46,7 @@ const ui = {
   aboutClose: $<HTMLButtonElement>("about-close"),
   glyph: $("glyph"),
   label: $("label"),
+  out: $<HTMLAnchorElement>("out"),
 };
 
 const ADAPTERS: Record<Platform, () => PlayerAdapter> = { youtube, soundcloud, bandcamp };
@@ -91,6 +92,32 @@ function paintMeta() {
   ui.meta.textContent = `${t.title} — ${t.artist}${t.year ? ` · ${t.year}` : ""}`;
   const sounding = playing || estimateRunning;
   document.title = sounding ? `${t.title} — ${t.artist} · not on spotify` : "not on spotify";
+}
+
+/**
+ * The link out, for tracks that carry one. Hidden rather than emptied when a
+ * track has none: `hidden` takes it out of the tab order and off the screen
+ * reader too, so nothing is left behind pointing at the previous track. Its
+ * room stays reserved in CSS either way, so nothing on the page moves.
+ *
+ * The label names the destination — "buy" would be a guess, and half of these
+ * are an artist's own site rather than a shop.
+ */
+function paintLink() {
+  const link = track().link;
+  ui.out.hidden = !link;
+  if (!link) return;
+  ui.out.href = link;
+  ui.out.setAttribute("aria-label", `open ${host(link)} in a new tab`);
+}
+
+/** "https://nitejewel.bandcamp.com/track/x" → "nitejewel.bandcamp.com". */
+function host(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "the artist's page";
+  }
 }
 
 /**
@@ -224,6 +251,7 @@ function go(delta: number, autoplay: boolean, keepStatus = false) {
   }
   paintMeta();
   paintButton();
+  paintLink();
   // Bandcamp mounts on sight — its embed is the only thing that can start it,
   // so it has to be there and ready. YouTube and SoundCloud stay unmounted
   // until the first tap: before that the clock is at rest and the page has
@@ -374,6 +402,7 @@ document.addEventListener("keydown", (e) => {
 paintMeta();
 paintButton();
 paintRepeat();
+paintLink();
 // The opening track gets what any other would: if it's a Bandcamp one, its
 // player is on screen from the start rather than one tap away.
 if (track().platform === "bandcamp") void mount(false);

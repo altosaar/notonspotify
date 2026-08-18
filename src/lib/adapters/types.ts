@@ -17,6 +17,9 @@ export interface ResolvedTrack {
   embedRef: string;
   title: string;
   artist: string;
+  /** Straight from tracks.yaml: where to buy it or find the artist, shown as
+   *  the one link under the play button. Never played, http(s) only. */
+  link?: string;
   year?: number;
   /** Seconds. Only ever set from tracks.yaml; YouTube and SoundCloud report
    *  their own, so in practice this is the Bandcamp estimate's input. */

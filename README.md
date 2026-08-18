@@ -10,11 +10,16 @@ same two typefaces, one moving object.
 1. Open [`tracks.yaml`](./tracks.yaml) on GitHub (mobile is fine) → ✏️.
 2. Copy a block, paste your link, fill in title and artist.
 3. Commit to `main`.
-4. Cloudflare Pages builds; live in about a minute.
+4. GitHub Actions builds and deploys; live in about a minute.
 
 `on.soundcloud.com` share links are fine as-is — the build expands them. Order in
 the file is playing order. A malformed entry fails the build and names itself in
 the log; the live site keeps running on the last good deploy until it's fixed.
+
+`link:` is optional and does one thing: it puts a small ↗ under the play button
+pointing wherever the artist would rather you went — their Bandcamp, their site.
+Unlike `url:` it isn't limited to the three platforms, because it is never
+played.
 
 ## How it works
 
@@ -138,9 +143,21 @@ Cloudflare Pages. Build command `npm run build`, output `dist/`.
 
 ## Deploy
 
+A push to `main` deploys, via
+[`.github/workflows/deploy.yml`](./.github/workflows/deploy.yml) — which is the
+whole point, since `tracks.yaml` gets edited from a phone as often as from an
+editor. The workflow runs `npm run deploy`, the same command a laptop does:
+
 ```bash
 npm run deploy        # build, then push to Cloudflare Pages
 ```
+
+It needs two repo secrets, both under Settings → Secrets → Actions:
+
+| secret                  | where it comes from                                                                       |
+| ----------------------- | ----------------------------------------------------------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`  | dash.cloudflare.com → My Profile → API Tokens → Create Token → **Cloudflare Pages: Edit** |
+| `CLOUDFLARE_ACCOUNT_ID` | `npx wrangler whoami`                                                                     |
 
 Today it rides along on the **`jaan-io` Pages project** as a preview branch
 called `notonspotify`, which is what puts it at

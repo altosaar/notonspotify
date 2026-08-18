@@ -8,6 +8,7 @@
 # - url: https://www.youtube.com/watch?v=...
 #   title: Title
 #   artist: Artist
+#   link: https://...    # optional — buy/artist page, shown under the play button
 #   year: 1989           # optional
 #   duration: 3390       # optional, seconds — makes the clock estimate on Bandcamp
 #   start: 0             # optional, seconds — start here (YouTube/SoundCloud only)
@@ -16,7 +17,7 @@
 - url: https://www.youtube.com/watch?v=nJKuaASTx1g
   title: Puisque bele dame m'eime
   artist: Nite Jewel
-  # link: https://nitejewel.bandcamp.com/track/puisque-bele-dame-meime
+  link: https://nitejewel.bandcamp.com/track/puisque-bele-dame-meime
 
 - url: https://www.youtube.com/watch?v=t1ek4siKqn4
   title: John Coltrane Giant Steps Carnatic Scatting ##
@@ -49,7 +50,7 @@
 - url: https://soundcloud.com/youreomar/hot-in-ya-alby
   title: Hot in Ya Alby
   artist: Omar ؏
-  # link: https://omarmakesmusic.bandcamp.com/track/hot-in-ya-alby
+  link: https://omarmakesmusic.bandcamp.com/track/hot-in-ya-alby
 
 - url: https://www.youtube.com/watch?v=PgG80WkPJQI
   title: Hold on (slowed + reverb)

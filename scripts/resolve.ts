@@ -56,6 +56,15 @@ const TrackInput = z
     }),
     title: z.string().min(1),
     artist: z.string().min(1),
+    // Where to send someone who wants the record rather than the stream: the
+    // artist's Bandcamp page, their site, wherever they'd rather be found. Only
+    // ever a link out — it is never played, so unlike `url` it isn't restricted
+    // to the three platforms. http(s) only, because this ends up as an href and
+    // a `javascript:` one would be a script tag with extra steps.
+    link: z
+      .url()
+      .refine((u) => /^https?:$/.test(new URL(u).protocol), { message: "must be http or https" })
+      .optional(),
     year: z.number().int().min(1850).max(2100).optional(),
     duration: z.number().int().positive().optional(),
     start: z.number().int().nonnegative().optional(),
@@ -212,6 +221,7 @@ async function resolveOne(input: TrackInput): Promise<ResolvedTrack> {
     embedRef,
     title: input.title,
     artist: input.artist,
+    ...(input.link !== undefined && { link: input.link }),
     ...(input.year !== undefined && { year: input.year }),
     ...(duration !== undefined && { duration }),
     // Bandcamp's embed has no seek, so a start offset there would be a lie.

@@ -111,6 +111,21 @@ const og = new URL("/og.png", Astro.site).href;
               ><path d="M11 0 1 7l10 7z"></path></svg
             >
           </button>
+          {
+            /* The way out: for a track with a `link:` in tracks.yaml, the place
+               to actually buy the record. Empty and hidden until the player
+               says otherwise — which track is showing is decided in the browser
+               (the opening one is random), so it can't be rendered here. The
+               room for it is reserved either way, so tracks with a link and
+               tracks without don't move the page between them. */
+          }
+          <a class="out" id="out" href="#" rel="noopener" target="_blank" hidden>
+            <svg class="out-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M14 4h6v6"></path>
+              <path d="M20 4 11 13"></path>
+              <path d="M17 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h5"></path>
+            </svg>
+          </a>
         </div>
       </main>
 
