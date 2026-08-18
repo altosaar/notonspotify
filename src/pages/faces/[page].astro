@@ -26,6 +26,7 @@ interface Choice {
   include?: boolean;
   x10?: boolean;
   notext?: boolean;
+  nonumbers?: boolean;
 }
 
 // Read, not imported: an import is cached by the module graph and would go stale
@@ -48,6 +49,7 @@ const names = entries.slice(index * PER_PAGE, (index + 1) * PER_PAGE).map((entry
     include: saved[name]?.include !== false,
     x10: saved[name]?.x10 === true,
     notext: saved[name]?.notext === true,
+    nonumbers: saved[name]?.nonumbers === true,
     // The hour hand is a track's place in the playlist; here it is the clock's
     // place in the forty, so no two on a page sit at the same hour.
     hours: (at / entries.length) * 12,
@@ -151,7 +153,7 @@ const title = `faces ${index + 1} of ${pages}`;
 
       .grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
         gap: 1rem;
       }
       figure {
@@ -261,6 +263,9 @@ const title = `faces ${index + 1} of ${pages}`;
               <label title="numbers only">
                 <input class="txt" type="checkbox" data-name={face.name} checked={face.notext} />
               </label>
+              <label title="no writing at all — numbers, colons and marks too">
+                <input class="nod" type="checkbox" data-name={face.name} checked={face.nonumbers} />
+              </label>
               <span class="who">
                 {face.title} · {face.author || "—"}
               </span>
@@ -275,12 +280,13 @@ const title = `faces ${index + 1} of ${pages}`;
     <script>
       import { flushSync } from "svelte";
       import { MIRRORED } from "../../lib/faces/clocksdev/index.ts";
-      import { stripWords } from "../../lib/faces/clocksdev/plain.ts";
+      import { stripText } from "../../lib/faces/clocksdev/plain.ts";
 
       interface Choice {
         include: boolean;
         x10: boolean;
         notext: boolean;
+        nonumbers: boolean;
       }
 
       const el = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -316,12 +322,10 @@ const title = `faces ${index + 1} of ${pages}`;
 
       for (const input of document.querySelectorAll<HTMLInputElement>("input[data-name]")) {
         const name = input.dataset.name!;
-        const key = input.classList.contains("inc")
-          ? "include"
-          : input.classList.contains("ten")
-            ? "x10"
-            : "notext";
-        choices[name] ??= { include: true, x10: false, notext: false };
+        const key = ({ inc: "include", ten: "x10", txt: "notext", nod: "nonumbers" } as const)[
+          input.classList[0] as "inc" | "ten" | "txt" | "nod"
+        ];
+        choices[name] ??= { include: true, x10: false, notext: false, nonumbers: false };
         input.addEventListener("change", () => {
           choices[name] = { ...choices[name]!, [key]: input.checked };
           save();
@@ -382,9 +386,12 @@ const title = `faces ${index + 1} of ${pages}`;
           if (!paused) face.t += dt * (choice?.x10 ? 10 : 1);
           try {
             face.handle.update({ elapsed: face.t, hours: face.hours });
-            if (choice?.notext) {
+            // Same rule the site uses: asking for no numbers settles it, and
+            // "keep the numbers" is not a second opinion worth honouring.
+            const strip = choice?.nonumbers ? "all" : choice?.notext ? "words" : null;
+            if (strip) {
               flushSync();
-              stripWords(face.handle.root);
+              stripText(face.handle.root, strip);
             }
           } catch {
             // A throw here would kill the loop and freeze every clock on the page.

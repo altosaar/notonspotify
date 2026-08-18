@@ -9,8 +9,8 @@
  */
 import { flushSync } from "svelte";
 import { FACES, type Face } from "./faces/index.ts";
-import { noTextOf, speedOf } from "./faces/eligible.ts";
-import { stripWords } from "./faces/clocksdev/plain.ts";
+import { speedOf, stripOf } from "./faces/eligible.ts";
+import { stripText } from "./faces/clocksdev/plain.ts";
 import type { FaceInput, FaceUpdate } from "./faces/kit.ts";
 
 export type ClockMode = "idle" | "playing" | "paused" | "buffering";
@@ -106,16 +106,16 @@ export function createClock(
       // the face draws whatever time it is handed and knows nothing about the
       // file, so there is exactly one place either of these can be applied.
       const speed = speedOf(face.name);
-      const plain = noTextOf(face.name);
+      const strip = stripOf(face.name);
       const handle = face.mount(box, scaled(now(), speed));
       draw = (input) => {
         handle.update(scaled(input, speed));
-        if (!plain) return;
+        if (strip === null) return;
         // Svelte writes the DOM on a microtask, so the words are not there to
         // strip until it has. Flushed rather than deferred so a frame is never
         // shown with the text still on it.
         flushSync();
-        stripWords(handle.root);
+        stripText(handle.root, strip);
       };
       teardown = handle.destroy;
     } catch (error) {

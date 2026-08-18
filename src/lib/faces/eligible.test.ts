@@ -5,10 +5,13 @@
  */
 import { describe, expect, it } from "vitest";
 import config from "../../../faces.json";
-import { ELIGIBLE_NAMES, noTextOf, speedOf } from "./eligible.ts";
+import { ELIGIBLE_NAMES, speedOf, stripOf } from "./eligible.ts";
 import { MIRROR_NAMES } from "./clocksdev/names.ts";
 
-const choices = config as Record<string, { include?: boolean; x10?: boolean; notext?: boolean }>;
+const choices = config as Record<
+  string,
+  { include?: boolean; x10?: boolean; notext?: boolean; nonumbers?: boolean }
+>;
 
 describe("faces.json", () => {
   it("only ever names real faces", () => {
@@ -34,14 +37,20 @@ describe("faces.json", () => {
     }
   });
 
-  it("strips the words only where it was asked for", () => {
+  it("strips only where it was asked to", () => {
     for (const name of MIRROR_NAMES) {
-      expect(noTextOf(name)).toBe(choices[name]?.notext === true);
+      const choice = choices[name];
+      const expected = choice?.nonumbers ? "all" : choice?.notext ? "words" : null;
+      expect(stripOf(name)).toBe(expected);
     }
   });
 
-  it("leaves a face nobody has judged yet alone", () => {
-    expect(noTextOf("cd-not-in-the-file-yet")).toBe(false);
+  it("lets no-numbers settle it when both are ticked", () => {
+    // Not a config the picker can produce by accident, but the file is edited by
+    // hand too and the two flags have to mean something together.
+    const both = Object.entries(choices).find(([, c]) => c.notext && c.nonumbers);
+    if (both) expect(stripOf(both[0])).toBe("all");
+    expect(stripOf("cd-not-in-the-file-yet")).toBe(null);
   });
 
   it("leaves something to deal", () => {

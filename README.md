@@ -183,10 +183,19 @@ npm run dev        # then open /faces/1
 ```
 
 Ten clocks a page, all running, each numbered by its place in `faces.json`.
-Three checkboxes each: **include**, **10×** for one too still to read otherwise,
-and **numbers only** for one that is as much poster as clock — that last strips
-every run of text with no digit in it, in the mounted DOM, leaving the layout and
-the time. **❚❚** freezes the page, **10×** at the
+Four checkboxes each:
+
+| box              | what it means                                                                |
+| ---------------- | ---------------------------------------------------------------------------- |
+| **include**      | off and this clock is never dealt to a track                                 |
+| **10×**          | its seconds run ten times faster, for one too still to read otherwise        |
+| **numbers only** | drop every run of text with no digit in it — the poster goes, the time stays |
+| **no writing**   | drop the numbers, colons and marks too, leaving only what the clock draws    |
+
+The last two work on the mounted DOM and never on the components themselves, so
+the mirrors stay copies. **no writing** wins over **numbers only** if both are
+set. Whitespace survives either — blanking it collapses the layout the clock is
+built in. **❚❚** freezes the page, **10×** at the
 top ticks all ten at once, and **faces.json** copies the result to the clipboard
 — paste it over [`faces.json`](./faces.json) at the root, which is what the build
 reads. Selections survive page changes (localStorage), so all four pages are one
@@ -194,7 +203,8 @@ sitting.
 
 `faces.json` is the only thing that matters afterwards: `include: false` and a
 clock is never dealt to a track, `x10: true` and its seconds run ten times faster
-on the live site, `notext: true` and only its numbers survive. A face missing from the file is included at 1×, so a newly
+on the live site, `notext: true` and only its numbers survive, `nonumbers: true`
+and nothing written survives at all. A face missing from the file is included at 1×, so a newly
 mirrored clock shows up rather than vanishing. Turning them all off fails the
 build rather than shipping an empty clock.
 

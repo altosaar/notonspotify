@@ -11,17 +11,21 @@
  *             still to read otherwise
  *   notext    strip everything that is not a number — for the ones that are as
  *             much poster as clock
+ *   nonumbers strip the numbers too, colons and marks with them, leaving only
+ *             what the clock draws. Supersedes notext rather than adding to it
  *
  * A face missing from the file is included at 1× — a new mirror shows up rather
  * than silently vanishing.
  */
 import config from "../../../faces.json";
 import { MIRROR_NAMES } from "./clocksdev/names.ts";
+import type { Strip } from "./clocksdev/plain.ts";
 
 interface Choice {
   include?: boolean;
   x10?: boolean;
   notext?: boolean;
+  nonumbers?: boolean;
 }
 
 const choices = config as Record<string, Choice | undefined>;
@@ -35,7 +39,13 @@ export function speedOf(name: string): number {
   return choices[name]?.x10 ? 10 : 1;
 }
 
-/** Whether to keep only the numbers on this face. */
-export function noTextOf(name: string): boolean {
-  return choices[name]?.notext === true;
+/**
+ * How much writing to take off this face, or null to leave it as its author
+ * drew it. `nonumbers` wins: having asked for no numbers, "keep the numbers"
+ * is not a second opinion worth honouring.
+ */
+export function stripOf(name: string): Strip | null {
+  const choice = choices[name];
+  if (choice?.nonumbers) return "all";
+  return choice?.notext ? "words" : null;
 }
