@@ -3,11 +3,16 @@
  * The face picker. Dev server only — `npm run dev`, then /faces/1.
  *
  * Ten clocks a page, running, so the two decisions can be made by looking: does
- * this belong here, and is it too still to read at track speed. The checkboxes
- * are the answers, the buttons are for finding out.
+ * this belong here, and is it too still to read at track speed. Ticking a box
+ * writes faces.json (see the facesWriter plugin in astro.config.mjs), so there
+ * is nothing to copy, paste or remember to save.
+ *
+ * Every clock carries its number in that file too, because a text editor is
+ * always a working fallback.
  *
  * `getStaticPaths` returns nothing in a production build, so this never ships.
  */
+import { readFileSync } from "node:fs";
 import manifest from "../../lib/faces/clocksdev/manifest.json";
 import { PER_PAGE } from "../../lib/faces/clocksdev/paging.ts";
 
@@ -17,17 +22,35 @@ export function getStaticPaths() {
   return Array.from({ length: pages }, (_, i) => ({ params: { page: String(i + 1) } }));
 }
 
+interface Choice {
+  include?: boolean;
+  x10?: boolean;
+}
+
+// Read, not imported: an import is cached by the module graph and would go stale
+// the moment the picker wrote to it. Astro re-runs this per request in dev, so
+// the page always shows what is actually in the file — hand edits included.
+const saved = JSON.parse(readFileSync("faces.json", "utf8")) as Record<string, Choice>;
+
 const entries = manifest as { slug: string; name: string; author: string }[];
 const pages = Math.ceil(entries.length / PER_PAGE);
 const index = Number(Astro.params.page) - 1;
-const names = entries.slice(index * PER_PAGE, (index + 1) * PER_PAGE).map((entry, i) => ({
-  name: `cd-${entry.slug}`,
-  title: entry.name,
-  author: entry.author,
-  // The hour hand is a track's place in the playlist; here it is the clock's
-  // place in the forty, so no two on a page sit at the same hour.
-  hours: ((index * PER_PAGE + i) / entries.length) * 12,
-}));
+const names = entries.slice(index * PER_PAGE, (index + 1) * PER_PAGE).map((entry, i) => {
+  const at = index * PER_PAGE + i;
+  const name = `cd-${entry.slug}`;
+  return {
+    name,
+    title: entry.name,
+    author: entry.author,
+    /** Its place in faces.json, 1-based, for editing by hand. */
+    number: at + 1,
+    include: saved[name]?.include !== false,
+    x10: saved[name]?.x10 === true,
+    // The hour hand is a track's place in the playlist; here it is the clock's
+    // place in the forty, so no two on a page sit at the same hour.
+    hours: (at / entries.length) * 12,
+  };
+});
 
 // Built here rather than inline: a "/" inside an expression in <title> is enough
 // to make prettier's Astro plugin close the head early and rearrange the page.
@@ -100,6 +123,22 @@ const title = `faces ${index + 1} of ${pages}`;
       .spacer {
         flex: 1;
       }
+      /* Whether the last write landed. Green on save, red if the dev server did
+         not take it — the one thing worth knowing and not worth a sentence. */
+      #saved {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #333;
+        transition: background 150ms;
+      }
+      #saved[data-state="ok"] {
+        background: #24cb71;
+      }
+      #saved[data-state="bad"] {
+        background: #ff2f2f;
+      }
+
       .grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
@@ -128,12 +167,26 @@ const title = `faces ${index + 1} of ${pages}`;
         position: relative;
         overflow: hidden;
       }
+      /* A component that throws still gets a tile, so the grid keeps its shape
+         and the checkboxes under it still work. */
+      .stage[data-broken]::after {
+        content: "✕";
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        color: #ff2f2f;
+      }
       figcaption {
         display: flex;
-        gap: 0.75rem;
+        gap: 0.5rem;
         align-items: center;
         padding: 0.4rem 0.55rem;
         border-top: 1px solid var(--line);
+      }
+      .num {
+        font-variant-numeric: tabular-nums;
+        opacity: 0.4;
       }
       label {
         display: flex;
@@ -154,7 +207,6 @@ const title = `faces ${index + 1} of ${pages}`;
         white-space: nowrap;
         opacity: 0.5;
       }
-      /* An excluded clock stays visible but stops asking to be looked at. */
       figure:has(.inc:not(:checked)) .stage {
         opacity: 0.22;
       }
@@ -165,6 +217,7 @@ const title = `faces ${index + 1} of ${pages}`;
     <nav class="bar">
       <button id="pause" type="button" aria-pressed="false" title="pause">❚❚</button>
       <button id="x10" type="button" aria-pressed="false" title="10× everything here">10×</button>
+      <span id="saved" title="saved to faces.json"></span>
       <span class="spacer"></span>
       {
         Array.from({ length: pages }, (_, i) => (
@@ -174,7 +227,6 @@ const title = `faces ${index + 1} of ${pages}`;
         ))
       }
       <span class="spacer"></span>
-      <button id="copy" type="button" title="copy the selection">faces.json</button>
     </nav>
 
     <div class="grid">
@@ -183,11 +235,12 @@ const title = `faces ${index + 1} of ${pages}`;
           <figure>
             <div class="stage" data-host={face.name} />
             <figcaption>
+              <span class="num">{String(face.number).padStart(2, "0")}</span>
               <label title="include">
-                <input class="inc" type="checkbox" data-name={face.name} />
+                <input class="inc" type="checkbox" data-name={face.name} checked={face.include} />
               </label>
               <label title="10×">
-                <input class="ten" type="checkbox" data-name={face.name} />
+                <input class="ten" type="checkbox" data-name={face.name} checked={face.x10} />
               </label>
               <span class="who">
                 {face.title} · {face.author || "—"}
@@ -199,74 +252,57 @@ const title = `faces ${index + 1} of ${pages}`;
     </div>
 
     <script id="page-faces" type="application/json" is:inline set:html={JSON.stringify(names)} />
+    <script id="page-saved" type="application/json" is:inline set:html={JSON.stringify(saved)} />
     <script>
       import { MIRRORED } from "../../lib/faces/clocksdev/index.ts";
-      import defaults from "../../../faces.json";
 
       interface Choice {
         include: boolean;
         x10: boolean;
       }
 
-      const KEY = "notonspotify:faces";
       const el = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
-      const faces = JSON.parse(el("page-faces").textContent ?? "[]") as {
-        name: string;
-        hours: number;
-      }[];
+      const json = (id: string) => JSON.parse(el(id).textContent ?? "null");
 
-      // faces.json is the starting point, localStorage is the work in progress.
-      // A browser cannot write to the repo, so the copy button ends a session.
-      const choices: Record<string, Choice> = Object.fromEntries(
-        Object.entries(defaults as Record<string, Partial<Choice>>).map(([name, choice]) => [
-          name,
-          { include: choice.include !== false, x10: choice.x10 === true },
-        ]),
-      );
-      try {
-        Object.assign(choices, JSON.parse(localStorage.getItem(KEY) ?? "{}"));
-      } catch {
-        // Nothing saved yet, or storage is off. faces.json is a fine start.
+      const faces = json("page-faces") as { name: string; hours: number }[];
+      const choices = json("page-saved") as Record<string, Choice>;
+      const saved = el("saved");
+
+      // ── Controls first ──────────────────────────────────────────────────
+      // Before a single clock is mounted, on purpose. These are forty
+      // components this repo did not write, and when one of them threw on the
+      // way up it took the rest of this script with it — leaving checkboxes
+      // that still looked clickable and saved nothing. Nothing below can reach
+      // this now.
+
+      let writing: Promise<void> = Promise.resolve();
+      function save() {
+        // Queued rather than fired off in parallel: two quick clicks must not
+        // race to write the same file.
+        writing = writing.then(async () => {
+          try {
+            const response = await fetch("/__faces", {
+              method: "POST",
+              body: JSON.stringify(choices),
+            });
+            saved.dataset.state = response.ok ? "ok" : "bad";
+          } catch {
+            saved.dataset.state = "bad";
+          }
+        });
       }
-      const save = () => localStorage.setItem(KEY, JSON.stringify(choices));
 
-      // Each clock keeps its own elapsed time, so turning 10× on winds it forward
-      // from here rather than jumping it to where it would have been all along.
-      const running = faces.flatMap((face) => {
-        const mirror = MIRRORED.find((m) => m.name === face.name);
-        const stage = document.querySelector<HTMLElement>(`[data-host="${face.name}"]`);
-        if (!mirror || !stage) return [];
-        const box = document.createElement("div");
-        box.className = "mirror";
-        stage.append(box);
-        const handle = mirror.mount(box, { elapsed: 0, hours: face.hours });
-        return [{ name: face.name, hours: face.hours, handle, t: 0 }];
-      });
-
-      let paused = false;
-      let last = performance.now();
-      requestAnimationFrame(function frame(now) {
-        const dt = (now - last) / 1000;
-        last = now;
-        for (const face of running) {
-          if (!paused) face.t += dt * (choices[face.name]?.x10 ? 10 : 1);
-          face.handle.update({ elapsed: face.t, hours: face.hours });
-        }
-        requestAnimationFrame(frame);
-      });
-
-      // The checkboxes show the saved answers, then write them back.
       for (const input of document.querySelectorAll<HTMLInputElement>("input[data-name]")) {
         const name = input.dataset.name!;
         const key = input.classList.contains("inc") ? "include" : "x10";
         choices[name] ??= { include: true, x10: false };
-        input.checked = choices[name][key];
         input.addEventListener("change", () => {
           choices[name] = { ...choices[name]!, [key]: input.checked };
           save();
         });
       }
 
+      let paused = false;
       const pause = el<HTMLButtonElement>("pause");
       pause.addEventListener("click", () => {
         paused = !paused;
@@ -274,27 +310,54 @@ const title = `faces ${index + 1} of ${pages}`;
       });
 
       // The page 10× ticks all ten boxes rather than holding a state of its own,
-      // so there is nothing that can disagree with what gets copied out.
+      // so there is nothing that can disagree with what is in the file.
       const ten = el<HTMLButtonElement>("x10");
       ten.addEventListener("click", () => {
         const on = ten.getAttribute("aria-pressed") !== "true";
         ten.setAttribute("aria-pressed", String(on));
         for (const input of document.querySelectorAll<HTMLInputElement>("input.ten")) {
+          if (input.checked === on) continue;
           input.checked = on;
           input.dispatchEvent(new Event("change"));
         }
       });
 
-      const copy = el<HTMLButtonElement>("copy");
-      copy.addEventListener("click", async () => {
-        // Keyed in faces.json's own order, so pasting it over the file is a
-        // readable diff rather than a reshuffle.
-        const ordered = Object.fromEntries(
-          Object.keys(defaults as Record<string, unknown>).map((name) => [name, choices[name]!]),
-        );
-        await navigator.clipboard.writeText(`${JSON.stringify(ordered, null, 2)}\n`);
-        copy.textContent = "copied";
-        setTimeout(() => (copy.textContent = "faces.json"), 1200);
+      // ── Then the clocks ─────────────────────────────────────────────────
+
+      const running = faces.flatMap((face) => {
+        const mirror = MIRRORED.find((m) => m.name === face.name);
+        const stage = document.querySelector<HTMLElement>(`[data-host="${face.name}"]`);
+        if (!mirror || !stage) return [];
+        try {
+          const box = document.createElement("div");
+          box.className = "mirror";
+          stage.append(box);
+          const handle = mirror.mount(box, { elapsed: 0, hours: face.hours });
+          return [{ name: face.name, hours: face.hours, handle, t: 0 }];
+        } catch (error) {
+          // Worth seeing rather than hiding: a clock that cannot mount here
+          // cannot mount on the site either, which is a reason to untick it.
+          console.error(`${face.name} failed to mount`, error);
+          stage.dataset.broken = "";
+          return [];
+        }
+      });
+
+      let last = performance.now();
+      requestAnimationFrame(function frame(now) {
+        const dt = (now - last) / 1000;
+        last = now;
+        for (const face of running) {
+          // Each clock keeps its own elapsed time, so turning 10× on winds it
+          // forward from here rather than jumping it.
+          if (!paused) face.t += dt * (choices[face.name]?.x10 ? 10 : 1);
+          try {
+            face.handle.update({ elapsed: face.t, hours: face.hours });
+          } catch {
+            // A throw here would kill the loop and freeze every clock on the page.
+          }
+        }
+        requestAnimationFrame(frame);
       });
     </script>
   </body>
