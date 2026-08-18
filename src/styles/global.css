@@ -386,8 +386,14 @@ main {
 
 /* Lifted from the StatusDot this is modelled on: 6px, a glow the width of the
    dot again, and a slow pulse. `currentColor` for the glow, so the colour is set
-   in exactly one place. */
-.dot {
+   in exactly one place.
+
+   NOT `.dot` — that belongs to the clock faces (see faces/kit.ts: "a moving
+   filled part"), and a bare `.dot` here put a 1.6s pulse and a 6px box on every
+   moving dot in orbits, dial, triangle and ticks. Nothing for specificity to
+   settle, either: these are different properties than `.face .dot` sets, so
+   they simply applied. */
+.banger-dot {
   width: 6px;
   height: 6px;
   flex: none;
