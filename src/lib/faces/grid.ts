@@ -1,4 +1,4 @@
-import { el, pick, type Face } from "./kit.ts";
+import { el, pick, type SvgFace } from "./kit.ts";
 
 /**
  * A field of dots that fill in as the track plays, like a progress bar with
@@ -8,7 +8,7 @@ import { el, pick, type Face } from "./kit.ts";
  * The grid's size, and whether it fills in rows or in columns, are drawn at
  * build time.
  */
-export const grid: Face = {
+export const grid: SvgFace = {
   name: "grid",
   build(svg, rnd) {
     const cols = pick(rnd, [12, 15, 20]);

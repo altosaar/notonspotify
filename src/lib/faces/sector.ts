@@ -1,4 +1,4 @@
-import { arc, el, type Face } from "./kit.ts";
+import { arc, el, type SvgFace } from "./kit.ts";
 
 const C = 100;
 const R = 62; // the band's centreline; its stroke width gives it its body
@@ -12,7 +12,7 @@ const R = 62; // the band's centreline; its stroke width gives it its body
  * from the top, others the other way from somewhere else entirely. The mirror
  * is a transform on the whole group, so every part turns with it.
  */
-export const sector: Face = {
+export const sector: SvgFace = {
   name: "sector",
   build(svg, rnd) {
     svg.setAttribute("viewBox", "0 0 200 200");

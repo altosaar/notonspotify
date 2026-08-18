@@ -53,10 +53,6 @@ const ui = {
 
 const ADAPTERS: Record<Platform, () => PlayerAdapter> = { youtube, soundcloud, bandcamp };
 
-const clock = createClock(ui.clock, (label) =>
-  ui.clock.firstElementChild?.setAttribute("aria-label", label),
-);
-
 let index = RANDOM_START ? Math.floor(Math.random() * tracks.length) : 0;
 let adapter: PlayerAdapter | null = null;
 let armed = false;
@@ -86,6 +82,14 @@ try {
 }
 
 const track = () => tracks[index]!;
+
+// Below `track` on purpose: the clock has to be handed the face this track was
+// dealt at build time, and that isn't knowable until `index` and `track` exist.
+const clock = createClock(
+  ui.clock,
+  (label) => ui.clock.firstElementChild?.setAttribute("aria-label", label),
+  track().face,
+);
 
 // ── Rendering ───────────────────────────────────────────────────────────────
 
@@ -251,7 +255,7 @@ function go(delta: number, autoplay: boolean, keepStatus = false) {
   index = (index + delta + tracks.length) % tracks.length;
   // New track, new face: which hand carries which layer of time, and where each
   // one starts, is drawn fresh here and holds for as long as this track does.
-  clock.shuffle();
+  clock.shuffle(track().face);
   if (!keepStatus) {
     status("");
     errors = 0; // a deliberate move is a fresh start for the error streak

@@ -9,6 +9,7 @@
     "build": "tsx scripts/resolve.ts && astro build",
     "preview": "astro preview",
     "check": "astro check",
+    "test": "vitest run",
     "format": "prettier --write .",
     "deploy": "npm run build && wrangler pages deploy dist --project-name=jaan-io --branch=notonspotify --commit-dirty=true"
   },
@@ -17,11 +18,16 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@astrojs/svelte": "^9.0.1",
     "@types/node": "^24.13.3",
+    "@vitest/browser": "^4.1.11",
+    "happy-dom": "^20.11.2",
     "prettier": "^3.9.6",
     "prettier-plugin-astro": "^0.14.1",
+    "svelte": "^5.56.9",
     "tsx": "^4.23.12",
     "typescript": "^5.9.3",
+    "vitest": "^4.1.11",
     "wrangler": "^4.123.0",
     "yaml": "^2.9.0",
     "zod": "^4.4.3"

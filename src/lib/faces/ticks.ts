@@ -1,4 +1,4 @@
-import { el, pick, polar, type Face } from "./kit.ts";
+import { el, pick, polar, type SvgFace } from "./kit.ts";
 
 const C = 100;
 
@@ -10,7 +10,7 @@ const C = 100;
  * The whole ring is spun to a random angle at build time, so the track doesn't
  * always start filling from twelve.
  */
-export const ticks: Face = {
+export const ticks: SvgFace = {
   name: "ticks",
   build(svg, rnd) {
     svg.setAttribute("viewBox", "0 0 200 200");

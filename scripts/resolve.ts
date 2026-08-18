@@ -19,6 +19,11 @@ import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
 import { z } from "zod";
 import type { Platform, ResolvedTrack } from "../src/lib/adapters/types.ts";
+// Names only: the mirrored clocks.dev faces are Svelte components, and this
+// script runs under plain Node. One list, so the deal can never name a face the
+// browser doesn't have.
+import { FACE_NAMES } from "../src/lib/faces/names.ts";
+import { shuffled } from "../src/lib/faces/kit.ts";
 
 const ROOT = resolvePath(dirname(fileURLToPath(import.meta.url)), "..");
 const IN = resolvePath(ROOT, "tracks.yaml");
@@ -233,8 +238,45 @@ async function resolveOne(input: TrackInput): Promise<ResolvedTrack> {
     // Bandcamp's embed has no seek, so a start offset there would be a lie.
     ...(input.start !== undefined && platform !== "bandcamp" && { start: input.start }),
     ...(input.note !== undefined && { note: input.note }),
+    // Overwritten by the deal once the drops are known; never left as "".
+    face: "",
     sourceUrl: input.url,
   };
+}
+
+// ── Faces ───────────────────────────────────────────────────────────────────
+
+/**
+ * One clock per track, dealt from the library without replacement, so no two
+ * tracks in a build wear the same face.
+ *
+ * Here rather than in the browser because that's what "a new set every rebuild"
+ * means: the deal is Math.random at BUILD time, fixed in playlist.json, and the
+ * same for every visitor until the next deploy. The browser keeps the other
+ * randomness — which part of a face carries seconds, where each starts — so a
+ * face still reads differently every time it's worn.
+ *
+ * When the library is smaller than the playlist there simply aren't enough to go
+ * round, so it deals in reshuffled rounds: still no repeats within a round, and
+ * never the same face twice running across the seam between them. Once the
+ * library passes the track count that branch stops running by itself and every
+ * track gets a genuinely unique one.
+ */
+function dealFaces(count: number): string[] {
+  const library = [...FACE_NAMES];
+  const out: string[] = [];
+  while (out.length < count) {
+    const round = shuffled(Math.random, library);
+    const previous = out.at(-1);
+    // Only possible at a seam, and only when the shuffle happens to repeat the
+    // face that just ended the last round.
+    if (previous !== undefined && round[0] === previous && round.length > 1) {
+      const last = round.length - 1;
+      [round[0], round[last]] = [round[last]!, round[0]!];
+    }
+    out.push(...round.slice(0, count - out.length));
+  }
+  return out;
 }
 
 // ── Run ─────────────────────────────────────────────────────────────────────
@@ -260,12 +302,25 @@ const settled = await Promise.all(
 const playlist = settled.filter((track): track is ResolvedTrack => track !== null);
 if (playlist.length === 0) fail("every entry failed to resolve — refusing to ship an empty player");
 
+// Dealt after the drops, not before: a track that failed to resolve shouldn't
+// take a face out of the deck with it.
+const faces = dealFaces(playlist.length);
+playlist.forEach((track, i) => {
+  track.face = faces[i]!;
+});
+
 mkdirSync(dirname(OUT), { recursive: true });
 writeFileSync(OUT, `${JSON.stringify(playlist, null, 2)}\n`);
 
 const counts = playlist.reduce<Record<string, number>>(
   (acc, t) => ({ ...acc, [t.platform]: (acc[t.platform] ?? 0) + 1 }),
   {},
+);
+console.log(
+  `  ✓ ${FACE_NAMES.length} faces, ${new Set(faces).size} distinct dealt over ${playlist.length} tracks` +
+    (FACE_NAMES.length < playlist.length
+      ? ` (library is short by ${playlist.length - FACE_NAMES.length})`
+      : ""),
 );
 console.log(
   `  ✓ ${playlist.length}/${inputs.length} tracks resolved` +

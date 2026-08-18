@@ -242,6 +242,66 @@ body {
   outline: none;
 }
 
+/* Forty clocks and twenty-odd names do not fit on a phone screen, so the panel
+   scrolls. The credits above it stop being vertically centred once there is
+   something under them to scroll to. */
+.about {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.credits {
+  min-height: 0;
+  padding-block: 2.5rem 1.5rem;
+}
+
+.attrib {
+  max-width: 34rem;
+  margin: 0 auto 2rem;
+  font-family: var(--font-chrome);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+.attrib h2 {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text);
+  margin-bottom: 0.75rem;
+}
+.attrib p {
+  margin-bottom: 0.75rem;
+}
+.attrib a {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+/* The one paragraph a reader should not skim past. */
+.attrib .notice {
+  border-left: 2px solid var(--siren);
+  padding-left: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.authors {
+  list-style: none;
+  display: grid;
+  gap: 0.6rem;
+}
+.authors li {
+  display: grid;
+  gap: 0.1rem;
+}
+.authors .who {
+  color: var(--text);
+}
+.authors .what {
+  font-size: 0.8125rem;
+  opacity: 0.75;
+}
+
 /* ── Stage ──────────────────────────────────────────────────────────────── */
 
 main {
@@ -264,15 +324,34 @@ main {
   min-height: 0;
 }
 
-.face {
+.face,
+.mirror {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   transition: opacity var(--dur) ease;
 }
-.face.is-dim {
+.face.is-dim,
+.mirror.is-dim {
   opacity: 0.6;
+}
+
+/* The mirrored clocks.dev faces. Deliberately NOT `.face`: the vocabulary rules
+   below reach in by class name (.frame, .dot, .mark, .progress, .seconds), and
+   those are ordinary words that turn up inside other people's components too.
+   A mirror is a copy or it is nothing, so nothing here styles its insides — it
+   gets a box the right shape and the same dim, and that is the lot. */
+.mirror {
+  display: grid;
+  place-items: center;
+  /* Their own backgrounds are part of the design and several are not black, so
+     the box clips them to its own corners rather than bleeding to the edges. */
+  overflow: hidden;
+}
+.mirror-box {
+  position: relative;
+  overflow: hidden;
 }
 
 /* The vocabulary every face is drawn in (see faces/kit.ts). A new face needs no

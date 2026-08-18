@@ -4,3 +4,7 @@ public/
 package-lock.json
 # The spec is the author's document; prettier does not get to reflow it.
 spec.md
+
+# Mirrored clocks.dev components. Byte-for-byte copies of other people's work —
+# reformatting them would make them no longer copies. See README.
+src/lib/faces/clocksdev/*.svelte

@@ -2,6 +2,24 @@
 import "../styles/global.css";
 import playlist from "../generated/playlist.json";
 import type { ResolvedTrack } from "../lib/adapters/types.ts";
+// Rendered at build time, not shipped to the browser: attribution is static
+// text and has no business in the player bundle.
+import mirrors from "../lib/faces/clocksdev/manifest.json";
+
+/** One entry per person, so each author is named once and reads as a person
+ *  rather than as a row in a table of forty. */
+const byAuthor = [
+  ...mirrors
+    .reduce((map, clock) => {
+      const author = clock.author?.trim() || "Anonymous";
+      const entry = map.get(author) ?? { author, website: clock.website || "", clocks: [] };
+      entry.clocks.push(clock.name);
+      if (!entry.website && clock.website) entry.website = clock.website;
+      map.set(author, entry);
+      return map;
+    }, new Map<string, { author: string; website: string; clocks: string[] }>())
+    .values(),
+].sort((a, b) => a.author.localeCompare(b.author));
 
 const tracks = playlist as ResolvedTrack[];
 const description =
@@ -80,6 +98,37 @@ const og = new URL("/og.png", Astro.site).href;
             >
           </li>
         </ul>
+
+        {
+          /* Attribution for the mirrored faces. Every one of the forty is a
+             copy of someone's work, so every one of them is named here, under
+             the person who made it. */
+        }
+        <section class="attrib">
+          <h2>clock faces</h2>
+          <p>
+            Eight are drawn for this site. The other {mirrors.length} are mirrored, unmodified, from
+            <a href="https://clocks.dev/">clocks.dev</a>, and belong to the {byAuthor.length} people below.
+          </p>
+          <p class="notice">
+            No licence is attached to any of them — clocks.dev states no terms and none of the
+            sources carries a notice — so they are used here with attribution and without a grant of
+            permission. If you made one and would rather it weren't here, mail{" "}
+            <a href="mailto:j@jaan.io?subject=clocks.dev%20face">j@jaan.io</a> and it comes out.
+          </p>
+          <ul class="authors">
+            {
+              byAuthor.map((entry) => (
+                <li>
+                  <span class="who">
+                    {entry.website ? <a href={entry.website}>{entry.author}</a> : entry.author}
+                  </span>
+                  <span class="what">{entry.clocks.join(", ")}</span>
+                </li>
+              ))
+            }
+          </ul>
+        </section>
       </dialog>
 
       <main>

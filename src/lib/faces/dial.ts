@@ -1,4 +1,4 @@
-import { arc, el, layerOf, polar, shuffled, spread, turn, SECONDS, type Face } from "./kit.ts";
+import { arc, el, layerOf, polar, shuffled, spread, turn, SECONDS, type SvgFace } from "./kit.ts";
 
 const C = 100;
 const R = 92;
@@ -11,7 +11,7 @@ const R = 92;
  * reads as a different instrument from track to track. The arc is exempt: it is
  * always progress, always from twelve, because it's the honest readout.
  */
-export const dial: Face = {
+export const dial: SvgFace = {
   name: "dial",
   build(svg, rnd) {
     svg.setAttribute("viewBox", "0 0 200 200");

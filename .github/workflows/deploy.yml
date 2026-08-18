@@ -30,6 +30,10 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      # The forty mirrored clocks.dev faces are third-party components nobody
+      # here can check by eye. This proves each one still mounts, redraws when
+      # the time changes, and unmounts — before any of it reaches the site.
+      - run: npm test
       # Build and deploy in one step, on purpose: `npm run deploy` is the same
       # command a laptop runs, so there is one definition of what shipping is.
       # A schema error in tracks.yaml fails here and nothing is published —

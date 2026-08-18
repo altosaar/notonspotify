@@ -68,17 +68,12 @@ Cloudflare Pages. Build command `npm run build`, output `dist/`.
   so with no track running it sits at rest — arc empty — rather than filling in
   as a wall clock. Nothing animates until there is something to animate: no
   timers run behind an idle page.
-- **Every track gets a different clock.** Eight faces — `dial`, `orbits`,
-  `ticks`, `sector`, `triangle`, `bars`, `grid`, `column` — one drawn at random
-  per track, never the same one twice running. Each shows the same three layers
-  of time (once per track, once per ten seconds, real seconds) in its own way,
-  and each randomises itself further on every build: which part carries which
-  layer, where each one starts, how many ticks or dots, which way round it goes.
-  Starting angles are thirds of a turn, spun and jittered, so two moving parts
-  never land on top of each other.
-  What is never randomised is progress itself — a bar that filled from a random
-  point, or a wedge that started at 20%, would be a lie. Cyclic layers get the
-  phase; progress starts at nothing.
+- **Every track gets its own clock, and no two share one.** The library is 48
+  faces — eight drawn here, forty mirrored from clocks.dev. `resolve.ts` deals
+  one per track at build time, without replacement, so a build with 23 tracks
+  uses 23 different faces and a rebuild deals a new set. Which layer of time each
+  face's parts carry is still drawn in the browser, per track, so the same face
+  reads as a different instrument each time it comes round.
 - **The faces have different shapes**, and the room they get does not change:
   the clock box is a fixed height, and each face's viewBox scales inside it. A
   wide one (`bars`, `grid`) uses the full column, a tall one (`column`) uses the
@@ -144,6 +139,33 @@ Cloudflare Pages. Build command `npm run build`, output `dist/`.
   prominent — one tap resumes. There is no workaround worth building.
 - **Reduced motion** replaces the sweep with one-second ticks and drops the
   buffering pulse.
+
+## Mirrored clocks
+
+`src/lib/faces/clocksdev/` holds forty clocks copied byte-for-byte from
+[clocks.dev](https://clocks.dev/). They are unmodified — `.prettierignore`
+covers them, because reformatting a copy stops it being one — and they are
+Svelte, which is the only reason this project has a Svelte dependency at all.
+Nothing is server-rendered by it; `clock.ts` mounts one component at a time into
+the clock box.
+
+**No licence is attached to any of them.** clocks.dev states no terms, its API
+exposes no licence field, and not one of the forty sources carries a notice — so
+each is its author's work under default copyright, all rights reserved. They are
+mirrored here at the site owner's direction, with every author named in the about
+panel and nothing implied about permission having been granted. Twenty-three
+people made them. If one of them objects, the fix is deleting a file.
+
+The one seam between those components and this site is `time.ts`. They ask for an
+hour, a minute and a second; what they get is **track** time, not wall time —
+which layer drives which hand is drawn per mounted face, the same way the
+hand-written faces choose what their parts carry. Their own `time.progress.*`
+contract (the sub-unit fractions six of them sweep on) is honoured exactly. So
+the components are untouched copies and the site still tells track time.
+
+`npm test` mounts all forty, drives them through a track, and unmounts them.
+Nobody here can look at forty clocks; CI can at least prove none of them throws
+or sits frozen.
 
 ## Deploy
 

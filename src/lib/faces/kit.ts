@@ -29,11 +29,39 @@ export interface FaceInput {
 
 export type FaceUpdate = (input: FaceInput) => void;
 
-export interface Face {
+/**
+ * A face drawn here: it builds itself into an <svg> the clock hands it, in the
+ * shared vocabulary above, and needs no teardown because dropping the <svg>
+ * drops everything it made.
+ */
+export interface SvgFace {
   name: string;
   /** `rnd` is only called while building: a face's randomness is fixed for as
    *  long as it is on screen. */
   build(svg: SVGSVGElement, rnd: () => number): FaceUpdate;
+}
+
+/**
+ * A face that mounts itself — the mirrored clocks.dev components, which are
+ * Svelte and bring their own markup and styles rather than drawing into an
+ * <svg>. It gets a plain box and has to clean up after itself, because a
+ * mounted component keeps running effects until it is told not to.
+ */
+export interface MountFace {
+  name: string;
+  mount(host: HTMLElement, rnd: () => number): FaceHandle;
+}
+
+export interface FaceHandle {
+  update: FaceUpdate;
+  destroy(): void;
+}
+
+export type Face = SvgFace | MountFace;
+
+/** The two kinds are told apart structurally — no discriminant to keep in sync. */
+export function isMounted(face: Face): face is MountFace {
+  return "mount" in face;
 }
 
 /** The three layers, by index — the order `layerOf` reads them in. */

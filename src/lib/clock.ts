@@ -7,7 +7,8 @@
  * clock looks; it only knows what time it is and which face is on.
  */
 import { FACES, type Face } from "./faces/index.ts";
-import type { FaceInput, FaceUpdate } from "./faces/kit.ts";
+import { DRAWN } from "./faces/drawn.ts";
+import { isMounted, type FaceInput, type FaceUpdate } from "./faces/kit.ts";
 
 export type ClockMode = "idle" | "playing" | "paused" | "buffering";
 
@@ -37,15 +38,26 @@ const REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)");
  * the face sweeps, and a Bandcamp estimate is the exact same code path with no
  * events at all.
  */
-export function createClock(host: HTMLElement, onLabel: (label: string) => void) {
+export function createClock(
+  host: HTMLElement,
+  onLabel: (label: string) => void,
+  /** The face the opening track was dealt. Wearing one is the constructor's job
+   *  because `svg` and `draw` have no meaningful empty state — nothing may paint
+   *  before a face is on. */
+  initialFace: string,
+) {
   let mode: ClockMode = "idle";
   let estimate = false;
   let duration = 0;
   let base = 0; // seconds, at the last anchor
   let at = performance.now(); // when that anchor was set
 
-  let svg: SVGSVGElement;
+  // The root the face lives in — an <svg> for the ones drawn here, a plain box
+  // for a mounted component. Only the state classes are put on it, so the two
+  // kinds need not have anything else in common.
+  let root: Element;
   let draw: FaceUpdate;
+  let teardown: (() => void) | null = null;
   let current: Face | null = null;
 
   /**
@@ -55,14 +67,47 @@ export function createClock(host: HTMLElement, onLabel: (label: string) => void)
   const pinned = FACES.find((f) => f.name === location.hash.replace("#face=", ""));
 
   function wear(face: Face) {
+    // A mounted component goes on running its effects until it is unmounted, so
+    // the outgoing face is always taken down first — dropping the node is enough
+    // for an <svg> and nowhere near enough for a component.
+    teardown?.();
+    teardown = null;
     current = face;
-    svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+
+    if (isMounted(face)) {
+      const box = document.createElement("div");
+      box.className = "mirror";
+      box.setAttribute("role", "img");
+      box.setAttribute("aria-label", "clock");
+      box.dataset.face = face.name;
+      // In the document before mounting: several of the mirrors measure
+      // themselves as they start up, and a detached node measures zero.
+      host.replaceChildren(box);
+      try {
+        const handle = face.mount(box, Math.random);
+        draw = handle.update;
+        teardown = handle.destroy;
+        root = box;
+        return;
+      } catch (error) {
+        // The mirrors are forty components this site did not write and cannot
+        // test by eye. One that throws on the way up takes its track's clock
+        // down with it, which is a blank box for the whole of that track — so it
+        // falls back to a face that is known to work and says so in the console
+        // rather than on the page.
+        console.warn(`face ${face.name} failed to mount, falling back`, error);
+        return wear(DRAWN[Math.floor(Math.random() * DRAWN.length)]!);
+      }
+    }
+
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("class", "face");
     svg.setAttribute("role", "img");
     svg.setAttribute("aria-label", "clock");
     svg.dataset.face = face.name;
     draw = face.build(svg, Math.random);
     host.replaceChildren(svg);
+    root = svg;
   }
 
   const elapsed = () => {
@@ -93,9 +138,9 @@ export function createClock(host: HTMLElement, onLabel: (label: string) => void)
     }
 
     draw(input);
-    svg.classList.toggle("is-dim", mode === "paused");
-    svg.classList.toggle("is-estimate", estimate);
-    svg.classList.toggle("is-buffering", mode === "buffering" && !reduced);
+    root.classList.toggle("is-dim", mode === "paused");
+    root.classList.toggle("is-estimate", estimate);
+    root.classList.toggle("is-buffering", mode === "buffering" && !reduced);
 
     const stamp = performance.now();
     if (stamp - lastLabelAt > 1000) {
@@ -127,18 +172,28 @@ export function createClock(host: HTMLElement, onLabel: (label: string) => void)
     else running = false;
   }
 
-  /** A new face for the new track — never the one just shown. */
-  function shuffle() {
+  /**
+   * Wear the face this track was dealt at build time. Which face that is stopped
+   * being the browser's decision when the deal moved into resolve.ts — every
+   * track in a build has its own, and no two share one.
+   *
+   * The name is looked up rather than trusted: a playlist.json written before a
+   * face was renamed or removed would otherwise leave the clock blank, and a
+   * missing face is not worth a broken page.
+   */
+  function shuffle(name?: string) {
     if (pinned) {
       if (!current) wear(pinned);
-    } else {
-      const others = current ? FACES.filter((f) => f !== current) : FACES;
-      wear(others[Math.floor(Math.random() * others.length)]!);
+      paint();
+      return;
     }
+    const dealt = FACES.find((f) => f.name === name);
+    const others = current ? FACES.filter((f) => f !== current) : FACES;
+    wear(dealt ?? others[Math.floor(Math.random() * others.length)]!);
     paint();
   }
 
-  shuffle();
+  shuffle(initialFace);
 
   return {
     set(patch: ClockPatch) {
@@ -169,7 +224,7 @@ export function createClock(host: HTMLElement, onLabel: (label: string) => void)
         schedule();
       }
     },
-    /** Draw a new face. Called once per track, by the player. */
+    /** Wear a named face. Called once per track, by the player. */
     shuffle,
     /** Seconds into the track right now. */
     elapsed,

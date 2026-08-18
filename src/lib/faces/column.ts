@@ -1,4 +1,4 @@
-import { el, type Face } from "./kit.ts";
+import { el, type SvgFace } from "./kit.ts";
 
 const W = 64;
 const TOP = 12;
@@ -11,7 +11,7 @@ const SPAN = BOTTOM - TOP;
  * underneath. Upright rather than round — the same three numbers read as a
  * gauge instead of a dial.
  */
-export const column: Face = {
+export const column: SvgFace = {
   name: "column",
   build(svg, rnd) {
     svg.setAttribute("viewBox", `0 0 ${W} 200`);

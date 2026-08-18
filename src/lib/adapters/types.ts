@@ -30,6 +30,9 @@ export interface ResolvedTrack {
   /** Seconds. Seek-on-play offset. Ignored for Bandcamp. */
   start?: number;
   note?: string;
+  /** The clock face this track wears, dealt from the library at build time so
+   *  no two tracks in a build share one. A new deal every rebuild. */
+  face: string;
   sourceUrl: string;
 }
 

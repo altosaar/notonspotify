@@ -1,4 +1,4 @@
-import { arc, el, layerOf, shuffled, spread, turn, SECONDS, type Face } from "./kit.ts";
+import { arc, el, layerOf, shuffled, spread, turn, SECONDS, type SvgFace } from "./kit.ts";
 
 const C = 100;
 const RADII = [44, 66, 88];
@@ -8,7 +8,7 @@ const RADII = [44, 66, 88];
  * track also draws the trail behind its dot, so progress is a widening arc at
  * whatever radius it landed on this time.
  */
-export const orbits: Face = {
+export const orbits: SvgFace = {
   name: "orbits",
   build(svg, rnd) {
     svg.setAttribute("viewBox", "0 0 200 200");

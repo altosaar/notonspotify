@@ -1,4 +1,4 @@
-import { el, layerOf, shuffled, spread, SECONDS, TRACK, type Face } from "./kit.ts";
+import { el, layerOf, shuffled, spread, SECONDS, TRACK, type SvgFace } from "./kit.ts";
 
 const W = 200;
 const X0 = 12;
@@ -12,7 +12,7 @@ const SPAN = X1 - X0;
  *
  * Wide rather than square, so it takes the room a phone actually has.
  */
-export const bars: Face = {
+export const bars: SvgFace = {
   name: "bars",
   build(svg, rnd) {
     svg.setAttribute("viewBox", "0 0 200 92");

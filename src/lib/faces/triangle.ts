@@ -1,4 +1,4 @@
-import { arc, el, layerOf, polar, shuffled, spread, SECONDS, type Face } from "./kit.ts";
+import { arc, el, layerOf, polar, shuffled, spread, SECONDS, type SvgFace } from "./kit.ts";
 
 const C = 100;
 const RADII = [46, 66, 86];
@@ -10,7 +10,7 @@ const RADII = [46, 66, 86];
  *
  * Which layer gets which radius, and where each starts, is drawn at build time.
  */
-export const triangle: Face = {
+export const triangle: SvgFace = {
   name: "triangle",
   build(svg, rnd) {
     svg.setAttribute("viewBox", "0 0 200 200");
