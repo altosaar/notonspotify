@@ -13,6 +13,52 @@
 #   start: 0             # optional, seconds — start here (YouTube/SoundCloud only)
 #   note: anything       # optional, not shown
 
+- url: https://www.youtube.com/watch?v=nJKuaASTx1g
+  title: Puisque bele dame m'eime
+  artist: Nite Jewel
+  # link: https://nitejewel.bandcamp.com/track/puisque-bele-dame-meime
+
+- url: https://www.youtube.com/watch?v=t1ek4siKqn4
+  title: John Coltrane Giant Steps Carnatic Scatting ##
+  artist: Varijashree
+
+- url: https://youtu.be/oi6qRw4Ry_8?si=qeflMdeQ1iLemREh
+  title: Waves of Light and Earth
+  artist: Takashi Kokubo
+
+- url: https://youtu.be/zujE-Y1Y3Us?si=4Gva9824-L9F4G-7
+  title: Feel
+  artist: Tabo's Project
+
+- url: https://youtu.be/p32E2W3dBjE?si=K6VYBRmXf_B7JQZk
+  title: Harlem's Finest (A Freestyle History Vol. I & II)
+  artist: Big L
+
+- url: https://youtu.be/Cx_cWSppMIE?si=VvREwXZa9VbVsYKX
+  title: Ultraviolet
+  artist: Lorde of the Isles
+
+- url: https://www.youtube.com/watch?v=7tKgttgz-hc
+  title: Puhkus
+  artist: Nublu
+
+- url: https://soundcloud.com/knxwledge/mygrl
+  title: mygrl_
+  artist: Knxwledge
+
+- url: https://soundcloud.com/youreomar/hot-in-ya-alby
+  title: Hot in Ya Alby
+  artist: Omar ؏
+  # link: https://omarmakesmusic.bandcamp.com/track/hot-in-ya-alby
+
+- url: https://www.youtube.com/watch?v=PgG80WkPJQI
+  title: Hold on (slowed + reverb)
+  artist: Tabii
+
+- url: https://www.youtube.com/watch?v=rKUJG5TdAl8
+  title: sameolemeek_
+  artist: Knxwledge
+
 - url: https://www.youtube.com/watch?v=c2u91BJc5vM
   title: Ruff Lovin
   artist: Coki
