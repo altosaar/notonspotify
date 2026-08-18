@@ -7,8 +7,10 @@
  *           rest. This is also the browser's autoplay gesture.
  *   intent  the visitor wants sound. Survives track changes, so auto-advance
  *           and prev/next know whether to start the next one playing.
- *   repeat  what happens at the end of a track: nothing, on to the next one, or
- *           this one again. Persisted between visits.
+ *   repeat  what happens at the end of the LIST: come to rest, or round again —
+ *           or, on "one", what happens at the end of this track. Either way the
+ *           next track follows the one that just finished; see ./ending.ts.
+ *           Persisted between visits.
  *
  * Bandcamp is the exception to `armed`: its embed IS its play button, so it
  * mounts the moment its track becomes current, before any tap. Nothing else
@@ -17,6 +19,7 @@
  * Adapters own their iframe and nothing else; the clock owns time; this owns
  * the rest.
  */
+import { afterTrack, type Repeat } from "./ending.ts";
 import { createClock } from "./clock.ts";
 import { bandcamp } from "./adapters/bandcamp.ts";
 import { soundcloud } from "./adapters/soundcloud.ts";
@@ -127,8 +130,7 @@ let estimateRunning = false;
 /** Bandcamp's stand-in for an `ended` event (see `armEstimateAdvance`). */
 let estimateTimer = 0;
 
-/** off → the whole list → this one track → off. */
-type Repeat = "off" | "all" | "one";
+/** off → the whole list → this one track → off. What each means: ./ending.ts */
 const REPEAT_CYCLE: Repeat[] = ["off", "all", "one"];
 const REPEAT_KEY = "notonspotify:repeat";
 
@@ -305,17 +307,24 @@ function wire(a: PlayerAdapter, t: ResolvedTrack, mine: number) {
   });
   a.on("ended", () => {
     if (!live()) return;
-    if (repeat === "all") return go(1, intent);
-    // "one" replays in place: a finished player restarts from the top when it
-    // is told to play again, on both platforms that can be told anything.
-    if (repeat === "one" && a.caps.control) return a.play();
-    // Nothing follows, so come to rest on the finished track. Setting `playing`
-    // here rather than waiting for a `paused` event: YouTube doesn't send one
-    // after the end, so the button would go on saying "pause" over silence.
-    playing = false;
-    clock.set({ mode: "paused" });
-    paintButton();
-    paintMeta();
+    switch (afterTrack(repeat, cursor === order.length - 1, a.caps.control)) {
+      // Replays in place: a finished player restarts from the top when it is
+      // told to play again, on both platforms that can be told anything.
+      case "again":
+        return a.play();
+      // `intent` and not `true`: someone who paused, then let the rest of the
+      // track run out, does not want the next one starting on its own.
+      case "next":
+        return go(1, intent);
+      // The end of the list. Setting `playing` here rather than waiting for a
+      // `paused` event: YouTube doesn't send one after the end, so the button
+      // would go on saying "pause" over silence.
+      case "stop":
+        playing = false;
+        clock.set({ mode: "paused" });
+        paintButton();
+        paintMeta();
+    }
   });
   a.on("error", () => live() && onError());
 }
@@ -431,9 +440,11 @@ function clickThrough() {
 function armEstimateAdvance() {
   clearTimeout(estimateTimer);
   const duration = track().duration;
-  // Only "all" applies: Bandcamp cannot be restarted, so "one" has nothing to
+  // The same rule the real `ended` follows, so an estimated ending and a real
+  // one behave alike. Bandcamp cannot be restarted, so "one" has nothing to
   // repeat with and simply lets the estimate run out.
-  if (repeat !== "all" || !estimateRunning || !duration) return;
+  const ending = afterTrack(repeat, cursor === order.length - 1, false);
+  if (ending !== "next" || !estimateRunning || !duration) return;
   const remaining = Math.max(0, duration - clock.elapsed()) * 1000 + 2000;
   estimateTimer = window.setTimeout(() => go(1, intent), remaining);
 }
