@@ -5,8 +5,9 @@
  *   armed   the visitor has tapped play at least once. Before that, nothing
  *           YouTube- or SoundCloud-shaped is mounted and the clock sits at
  *           rest. This is also the browser's autoplay gesture.
- *   intent  the visitor wants sound. Survives track changes, so auto-advance
- *           and prev/next know whether to start the next one playing.
+ *   intent  the visitor wants sound. Survives track changes, so the automatic
+ *           paths — a track ending, an error skipping on — know whether to start
+ *           the next one playing. Pressing prev/next sets it: see `skip`.
  *   repeat  what happens at the end of the LIST: come to rest, or round again —
  *           or, on "one", what happens at the end of this track. Either way the
  *           next track follows the one that just finished; see ./ending.ts.
@@ -364,6 +365,26 @@ function go(delta: number, autoplay: boolean, keepStatus = false) {
   if (armed || track().platform === "bandcamp") void mount(autoplay);
 }
 
+/**
+ * Prev/next as a visitor presses them: an ask to HEAR that track, not merely to
+ * move the cursor.
+ *
+ * `go(delta, intent)` is the automatic path — an ending track, an error skipping
+ * on — where carrying `intent` is right: someone who paused and walked away
+ * should not be handed sound. A press is not that. Pressing → over a paused
+ * track, or before ever pressing play, was moving the title and leaving silence,
+ * which reads as a broken button.
+ *
+ * Arming here is honest as well as necessary: the press is the gesture browsers
+ * want before anything makes noise, and it is the same tap that would have armed
+ * the play button.
+ */
+function skip(delta: number) {
+  armed = true;
+  intent = true;
+  go(delta, true);
+}
+
 function toggle() {
   // The button is disabled in this state, but Space routes here directly, so
   // the rule lives here too. It does NOT focus the embed as it once did: moving
@@ -465,8 +486,8 @@ function click(button: HTMLButtonElement, run: () => void) {
 }
 
 click(ui.toggle, toggle);
-click(ui.prev, () => go(-1, intent));
-click(ui.next, () => go(1, intent));
+click(ui.prev, () => skip(-1));
+click(ui.next, () => skip(1));
 click(ui.shuffle, () => {
   shuffle = !shuffle;
   try {
@@ -515,9 +536,10 @@ document.addEventListener("keydown", (e) => {
     e.preventDefault();
     toggle();
   } else if (e.key === "ArrowLeft") {
-    go(-1, intent);
+    // The keys are the buttons; same ask, same answer.
+    skip(-1);
   } else if (e.key === "ArrowRight") {
-    go(1, intent);
+    skip(1);
   }
 });
 
