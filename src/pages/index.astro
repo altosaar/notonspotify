@@ -87,6 +87,24 @@ const og = new URL("/og.png", Astro.site).href;
         </ul>
 
         {
+          /* Where the playlist actually lives. The mailto above is the way in
+             for someone who just wants to name a song; this is the way in for
+             someone who would rather add it themselves — tracks.yaml is one
+             file, and GitHub's own editor works on a phone.
+
+             Reuses .attrib rather than earning its own class: it is the same
+             kind of block as the section under it — a small caps heading over
+             muted body copy — and a second class that resolved to the same
+             rules would only be a second place to keep them in step. */
+        }
+        <section class="attrib">
+          <h2>contribute</h2>
+          <p>
+            <a href="https://github.com/altosaar/notonspotify">github.com/altosaar/notonspotify</a>
+          </p>
+        </section>
+
+        {
           /* Attribution for the mirrored faces. Every one of the forty is a
              copy of someone's work, so every one of them is named here, under
              the person who made it. */
