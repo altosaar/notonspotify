@@ -11,7 +11,7 @@
     "check": "astro check",
     "test": "vitest run",
     "format": "prettier --write .",
-    "deploy": "npm run build && wrangler pages deploy dist --project-name=jaan-io --branch=notonspotify --commit-dirty=true"
+    "deploy": "npm run build && wrangler pages deploy dist --project-name=notonspotify --branch=main --commit-dirty=true"
   },
   "dependencies": {
     "astro": "^7.2.2"

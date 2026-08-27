@@ -56,8 +56,9 @@ SKIP_RESOLVE=1 npm run dev   # no network: placeholder refs, real UI
 npm run check          # astro check / tsc
 ```
 
-Node 24 (`.nvmrc`) — Astro 7 requires ≥ 22.12, so set `NODE_VERSION=24` on
-Cloudflare Pages. Build command `npm run build`, output `dist/`.
+Node 24 (`.nvmrc`) — Astro 7 requires ≥ 22.12. CI reads the version out of that
+file and there is nowhere else to set it: Cloudflare builds nothing here, it
+receives `dist/`. See [Deploy](#deploy).
 
 ## Things that are deliberate
 
@@ -229,20 +230,35 @@ It needs two repo secrets, both under Settings → Secrets → Actions:
 | `CLOUDFLARE_API_TOKEN`  | dash.cloudflare.com → My Profile → API Tokens → Create Token → **Cloudflare Pages: Edit** |
 | `CLOUDFLARE_ACCOUNT_ID` | `npx wrangler whoami`                                                                     |
 
-Today it rides along on the **`jaan-io` Pages project** as a preview branch
-called `notonspotify`, which is what puts it at
-<https://notonspotify.jaan-io.pages.dev>. That project's production branch is
-`main`, so this can never publish over jaan.io — a preview branch is only ever
-reachable at its own `*.pages.dev` alias.
+The project is **`notonspotify`** on Cloudflare Pages, production branch `main`,
+and it is **direct upload** — Cloudflare never builds anything. The workflow
+above is the only build there is, which is what makes it a gate: a schema error
+in `tracks.yaml`, or a clock that stops mounting, fails there and nothing is
+published. Cloudflare keeps serving the last good deploy.
 
-The intended end state (spec §9) is its own project, which is one command and
-one DNS record away:
+It used to ride along on the `jaan-io` project as a preview branch, at
+<https://notonspotify.jaan-io.pages.dev>. That could never have reached
+`notonspotify.jaan.io`: a Pages custom domain attaches to a project's
+**production** deployment, and a preview branch is only ever reachable at its
+own `*.pages.dev` alias — so the canonical URL the pages were already claiming
+was unservable from where they sat. Its own project is what fixed that.
+
+### Two things outside this repo
+
+Nothing here would recreate either, and each is a click away from taking the
+site down, so they are written down rather than left in a dashboard.
+
+- **The custom domain.** `notonspotify.jaan.io` is a custom domain on the
+  `notonspotify` Pages project, added in the dashboard — Wrangler has no
+  `pages domain` command. Adding it created the proxied CNAME to
+  `notonspotify.pages.dev` in the `jaan.io` zone, and issued the certificate.
+  Removing it puts the site back at `notonspotify.pages.dev`, still live, still
+  claiming a canonical URL that no longer resolves.
+- **`jaan.io/notonspotify` → here**, as line 49–50 of the `jaan-io` repo's
+  `public/_redirects`. A 302 rather than a 301, because a 301 is cached by the
+  browser forever and this address is younger than the redirect pointing at it.
 
 ```bash
-wrangler pages project create notonspotify --production-branch main
-npm run build && wrangler pages deploy dist --project-name=notonspotify --branch=main
-# then attach notonspotify.jaan.io as a custom domain in the dashboard
+# What made the project, once. Kept for the record, not to be re-run.
+wrangler pages project create notonspotify --production-branch=main
 ```
-
-Either way `jaan.io/notonspotify` 302s to the live address — one rule in the
-`jaan-io` repo's `public/_redirects`.
