@@ -55,6 +55,22 @@ const og = new URL("/og.png", Astro.site).href;
       crossorigin
     />
     <link rel="preload" as="font" type="font/woff2" href="/fonts/Inter.woff2" crossorigin />
+    {/* GA4, the "jaan.io projects" property shared with the other jaan.io
+        subdomains: only on the real host, so pages.dev, localhost and previews
+        send nothing. */}
+    <script is:inline>
+      (function () {
+        if (location.hostname !== "notonspotify.jaan.io") return;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () { window.dataLayer.push(arguments); };
+        window.gtag("js", new Date());
+        window.gtag("config", "G-71HTG8TEQ1");
+        var s = document.createElement("script");
+        s.async = true;
+        s.src = "https://www.googletagmanager.com/gtag/js?id=G-71HTG8TEQ1";
+        document.head.appendChild(s);
+      })();
+    </script>
   </head>
 
   <body>
